@@ -1,0 +1,17 @@
+<div class="relative">
+  <svg
+    class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+  <input
+    type="search"
+    class="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-black/25 text-white text-sm placeholder-white/30 focus:outline-none focus:border-yellow-600/50 focus:ring-2 focus:ring-yellow-600/20 transition-all"
+    placeholder="Buscar por nome ou telefone..."
+    [ngModel]="value()"
+    (ngModelChange)="searchChange.emit($event)"
+  />
+</div>

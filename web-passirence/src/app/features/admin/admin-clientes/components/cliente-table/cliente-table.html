@@ -1,0 +1,71 @@
+<div class="hidden lg:block rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden animate-fade-up">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/10 bg-black/20">
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Cliente</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Telefone</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Status</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Último agendamento</th>
+          <th class="text-right px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (isLoading()) {
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <tr class="border-b border-white/5">
+              @for (c of [1, 2, 3, 4, 5]; track c) {
+                <td class="px-4 py-4"><div class="h-4 rounded bg-white/10 animate-pulse"></div></td>
+              }
+            </tr>
+          }
+        } @else {
+          @for (row of rows(); track row.id) {
+            <tr class="border-b border-white/5 hover:bg-black/20 transition-colors duration-200 group">
+              <td class="px-4 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#0066ff] to-[#0052cc] flex items-center justify-center text-white font-bold text-sm ring-2 ring-yellow-600/20 group-hover:ring-yellow-600/40 transition-all">
+                    {{ initials(row.nome) }}
+                  </div>
+                  <span class="text-white font-bold">{{ row.nome }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-4 text-white/70 tabular-nums">{{ phone(row.telefone) }}</td>
+              <td class="px-4 py-4"><app-cliente-status-badge [ativo]="row.ativo" /></td>
+              <td class="px-4 py-4 text-white/50 text-xs">{{ row.lastAppointmentLabel }}</td>
+              <td class="px-4 py-4">
+                <div class="flex items-center justify-end gap-1">
+                  <a
+                    [routerLink]="['/admin/clientes', row.id]"
+                    title="Visualizar"
+                    class="p-2 rounded-lg text-white/50 hover:text-yellow-600 hover:bg-yellow-600/10 transition-all"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </a>
+                  <button type="button" title="Editar" class="p-2 rounded-lg text-white/50 hover:text-[#0066ff] hover:bg-[#0066ff]/15 transition-all" (click)="edit.emit(row)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button type="button" [title]="row.ativo ? 'Desativar' : 'Ativar'" class="p-2 rounded-lg text-white/50 hover:text-yellow-600 hover:bg-yellow-600/10 transition-all" (click)="toggle.emit(row)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </button>
+                  <button type="button" title="Excluir" class="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all" (click)="remove.emit(row)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

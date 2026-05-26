@@ -1,0 +1,53 @@
+<article class="rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md p-4 transition-all duration-300 hover:border-yellow-600/30 hover:shadow-lg hover:shadow-black/20">
+  <div class="flex items-start justify-between gap-3 mb-3">
+    <div>
+      <p class="text-yellow-600 text-xs font-bold uppercase tracking-wider">{{ typeLabel() }}</p>
+      <p class="text-white font-bold mt-0.5">{{ professionalName() }}</p>
+    </div>
+    <div class="flex flex-wrap gap-1 justify-end max-w-[140px]">
+      @if (block().isRecurring) {
+        <app-schedule-block-badge label="Recorrente" variant="recurring" />
+      } @else {
+        <app-schedule-block-badge label="Avulso" variant="oneoff" />
+      }
+      @if (block().professionalId == null) {
+        <app-schedule-block-badge label="Global" variant="global" />
+      } @else {
+        <app-schedule-block-badge label="Profissional" variant="professional" />
+      }
+    </div>
+  </div>
+
+  <div class="space-y-2 text-sm mb-4">
+    <div class="flex justify-between text-white/60">
+      <span>Data</span>
+      <span class="text-white font-medium">{{ dateLabel() }}</span>
+    </div>
+    <div class="flex justify-between text-white/60">
+      <span>Horário</span>
+      <span class="text-yellow-600 font-bold">{{ timeLabel() }}</span>
+    </div>
+    <div class="text-white/50 text-xs line-clamp-2">{{ block().reason || '—' }}</div>
+  </div>
+
+  <div class="flex gap-2 pt-3 border-t border-white/10">
+    <button
+      type="button"
+      title="Editar"
+      class="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider text-white/70 bg-white/5 border border-white/10 hover:bg-[#0066ff]/20 hover:border-[#0066ff]/40 hover:text-white transition-all"
+      (click)="edit.emit(block())"
+    >
+      Editar
+    </button>
+    <button
+      type="button"
+      title="Remover"
+      class="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-400/30 transition-all"
+      (click)="remove.emit(block())"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </button>
+  </div>
+</article>

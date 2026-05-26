@@ -1,0 +1,58 @@
+<div class="hidden lg:block rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden">
+  @if (isLoading()) {
+    <div class="p-8 space-y-3">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="h-12 rounded-xl bg-white/10 animate-pulse"></div>
+      }
+    </div>
+  } @else {
+    <div class="flex border-b border-white/10 bg-black/20 overflow-x-auto">
+      <div class="w-16 shrink-0"></div>
+      @for (col of professionalColumns(); track col.id ?? 'all') {
+        <div class="flex-1 min-w-[200px] px-3 py-3 text-center border-l border-white/5">
+          <p class="text-white font-bold text-xs uppercase tracking-wider truncate">{{ col.label }}</p>
+        </div>
+      }
+    </div>
+
+    <div class="flex overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto">
+      <div class="w-16 shrink-0 border-r border-white/10 bg-black/15">
+        @for (slot of slots(); track slot.minutes) {
+          <div class="h-12 pr-2 flex items-start justify-end border-b border-white/5">
+            <span class="text-[0.65rem] text-white/30 font-medium tabular-nums">{{ slot.label }}</span>
+          </div>
+        }
+      </div>
+
+      @for (col of professionalColumns(); track col.id ?? 'all') {
+        <div class="flex-1 min-w-[200px] relative border-l border-white/5" [style.min-height.px]="gridHeight()">
+          @for (slot of slots(); track slot.minutes) {
+            <div class="h-12 border-b border-white/5"></div>
+          }
+
+          @for (block of blocksForColumn(col.id); track block.id) {
+            <div
+              class="absolute left-1 right-1 rounded-lg bg-white/10 border border-white/15 border-dashed px-2 py-1 overflow-hidden z-10"
+              [style.top]="blockTop(block)"
+              [style.height]="blockHeight(block)"
+              [title]="block.reason"
+            >
+              <p class="text-[0.6rem] text-white/50 uppercase font-bold truncate">Bloqueio</p>
+              <p class="text-[0.65rem] text-white/70 truncate">{{ block.reason }}</p>
+            </div>
+          }
+
+          @for (event of eventsForColumn(col.id); track event.id) {
+            <div
+              class="absolute left-1 right-1 z-20 min-h-[44px]"
+              [style.top]="top(event)"
+              [style.height]="height(event)"
+            >
+              <app-appointment-card [event]="event" [compact]="true" (select)="selectEvent.emit($event)" />
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,172 @@
+<div class="p-5 lg:p-8">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Gerenciar Profissionais</h1>
+      <p class="text-gray-500 text-sm mt-1">Cadastre e gerencie os profissionais</p>
+    </div>
+    <button (click)="openCreateModal()"
+      class="px-4 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer">
+      + Novo Profissional
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex items-center justify-center h-48">
+      <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0066ff] rounded-full animate-spin"></div>
+    </div>
+  } @else if (professionals().length === 0) {
+    <div class="bg-white/95 rounded-xl shadow-sm border border-white/20 p-12 text-center">
+      <p class="text-gray-500 mb-2">Nenhum profissional cadastrado</p>
+      <p class="text-gray-400 text-sm">Clique em "Novo Profissional" para comecar</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (pro of professionals(); track pro.id) {
+        <div class="bg-[#1B2B5E] rounded-2xl p-5 flex flex-col gap-4 shadow-lg">
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <h3 class="text-white font-bold text-lg leading-tight">{{ pro.nome }}</h3>
+            <span [class]="pro.ativo ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'"
+              class="flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full shrink-0 ml-2">
+              @if (pro.ativo) { <span>✓</span> }
+              {{ pro.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+          <!-- Info -->
+          <div class="flex flex-col gap-2">
+            @if (pro.telefone) {
+              <div class="flex items-center gap-2 text-sm">
+                <span>📱</span>
+                <span class="text-blue-200 font-semibold">Telefone:</span>
+                <span class="text-white">{{ pro.telefone }}</span>
+              </div>
+            }
+          </div>
+          <!-- Actions -->
+          <div class="flex gap-2 pt-1">
+            <button (click)="openEditModal(pro)"
+              style="background-color: #0f1e4a"
+              class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-white text-[10px] font-bold uppercase rounded-xl transition-colors cursor-pointer">
+              <span class="text-base">✏️</span>
+              Editar
+            </button>
+
+            <button (click)="toggleProfessionalStatus(pro)"
+              style="background-color: #0f1e4a"
+              class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-white text-[10px] font-bold uppercase rounded-xl transition-colors cursor-pointer">
+              <span class="text-base">{{ pro.ativo ? '🚫' : '✅' }}</span>
+              {{ pro.ativo ? 'Desativar' : 'Ativar' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showModal()) {
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      (click)="closeModal()">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-900">
+            @if (isEditing()) { Editar Profissional } @else { Novo Profissional }
+          </h3>
+          <button (click)="closeModal()"
+            class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Nome</label>
+            <input type="text" [(ngModel)]="formData.nome" placeholder="Nome completo"
+              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"/>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Telefone</label>
+            <input type="tel" [value]="formData.telefone" (input)="onPhoneInput($event)" placeholder="(00) 00000-0000"
+              [class]="phoneError() ? 'w-full px-3 py-2.5 rounded-lg border border-red-400 text-sm text-gray-800 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all' : 'w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all'"/>
+            @if (phoneError()) {
+              <p class="mt-1 text-xs text-red-500">{{ phoneError() }}</p>
+            }
+          </div>
+        </div>
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+          @if (isEditing()) {
+            <button (click)="confirmDelete(currentProfessional()!)"
+              class="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded-lg hover:bg-red-100 transition-colors cursor-pointer border border-red-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Excluir
+            </button>
+          } @else {
+            <span></span>
+          }
+          <div class="flex gap-3">
+            <button (click)="closeModal()"
+              class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button (click)="saveProfessional()"
+              [disabled]="!!phoneError()"
+              class="px-4 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+
+
+  @if (showFeedbackModal()) {
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      (click)="feedbackType() !== 'confirm' ? closeFeedbackModal() : null">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" (click)="$event.stopPropagation()">
+        @if (feedbackType() === 'success') {
+          <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        } @else if (feedbackType() === 'error') {
+          <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+        } @else {
+          <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+        }
+        <p class="text-gray-800 font-medium mb-5">{{ feedbackMessage() }}</p>
+        @if (feedbackType() === 'confirm') {
+          <div class="flex gap-3 justify-center">
+            <button (click)="closeFeedbackModal()"
+              class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button (click)="handleConfirmAction()"
+              class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors cursor-pointer">
+              Confirmar
+            </button>
+          </div>
+        } @else {
+          <button (click)="closeFeedbackModal()"
+            class="px-6 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer">
+            OK
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

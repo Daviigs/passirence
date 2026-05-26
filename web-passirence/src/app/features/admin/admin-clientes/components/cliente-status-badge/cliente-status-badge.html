@@ -1,0 +1,12 @@
+<span
+  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border"
+  [class]="ativo()
+    ? 'bg-green-500/15 text-green-400 border-green-500/30'
+    : 'bg-white/5 text-white/40 border-white/10'"
+>
+  <span
+    class="w-1.5 h-1.5 rounded-full"
+    [class]="ativo() ? 'bg-green-400' : 'bg-white/30'"
+  ></span>
+  {{ ativo() ? 'Ativo' : 'Inativo' }}
+</span>

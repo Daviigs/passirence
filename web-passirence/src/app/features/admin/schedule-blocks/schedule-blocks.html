@@ -1,0 +1,195 @@
+<div class="p-4 sm:p-6 lg:p-8 min-h-full relative">
+
+  <!-- Toast -->
+  @if (showToast()) {
+    <div
+      class="fixed top-4 right-4 left-4 sm:left-auto z-[60] sm:max-w-sm animate-fade-down"
+      role="status"
+    >
+      <div
+        class="flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md"
+        [class]="toastType() === 'success'
+          ? 'bg-[#1B2B5E]/95 border-yellow-600/40 text-white'
+          : 'bg-red-950/90 border-red-400/40 text-red-100'"
+      >
+        <p class="text-sm font-medium flex-1">{{ toastMessage() }}</p>
+        <button type="button" class="text-white/50 hover:text-white" (click)="dismissToast()" aria-label="Fechar">×</button>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 animate-fade-down">
+    <div class="flex items-start gap-3">
+      <button
+        type="button"
+        class="lg:hidden shrink-0 p-2.5 rounded-xl bg-black/25 border border-white/10 text-white hover:border-yellow-600/40 transition-all"
+        aria-label="Abrir menu"
+        (click)="openMenu()"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <div>
+        <p class="text-white/50 text-xs font-bold uppercase tracking-[0.2em] mb-1">Administração</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Bloqueios de Agenda</h1>
+        <p class="text-white/60 text-sm mt-1.5 max-w-xl">
+          Gerencie folgas, pausas e indisponibilidades dos profissionais.
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] shadow-lg shadow-[#0066ff]/25 hover:shadow-xl hover:-translate-y-0.5 transition-all border border-white/10 hover:border-yellow-600/30 shrink-0"
+      (click)="openCreateModal()"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Novo bloqueio
+    </button>
+  </header>
+
+  <!-- Filtros -->
+  <div class="mb-6">
+    <app-schedule-block-filters
+      [professionals]="professionals()"
+      [filters]="filters()"
+      (filtersChange)="onFiltersChange($event)"
+      (clearFilters)="clearFilters()"
+    />
+  </div>
+
+  @if (loadError()) {
+    <div class="mb-6 p-4 rounded-xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm animate-fade-up">
+      {{ loadError() }}
+      <button type="button" class="block mt-2 text-white underline text-xs" (click)="loadBlocks()">Tentar novamente</button>
+    </div>
+  }
+
+  <!-- Conteúdo -->
+  @if (isLoading()) {
+  <!-- Skeleton mobile -->
+    <div class="lg:hidden grid grid-cols-1 gap-4 mb-4">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="rounded-2xl border border-white/10 bg-[#1B2B5E]/60 p-4 space-y-3 animate-pulse">
+          <div class="h-4 w-1/3 bg-white/10 rounded"></div>
+          <div class="h-5 w-2/3 bg-white/10 rounded"></div>
+          <div class="h-3 w-full bg-white/10 rounded"></div>
+        </div>
+      }
+    </div>
+    <app-schedule-block-table [rows]="[]" [isLoading]="true" />
+  } @else if (blocks().length === 0) {
+    <div class="text-center py-16 px-6 rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md animate-fade-up">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-black/25 border border-white/10 flex items-center justify-center text-3xl">🚫</div>
+      <h3 class="text-white font-bold text-lg mb-2">Nenhum bloqueio encontrado</h3>
+      <p class="text-white/50 text-sm mb-6 max-w-sm mx-auto">
+        Crie bloqueios para folgas, almoço, férias ou indisponibilidades da barbearia.
+      </p>
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all"
+        (click)="openCreateModal()"
+      >
+        + Criar bloqueio
+      </button>
+    </div>
+  } @else {
+    <!-- Mobile cards -->
+    <div class="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      @for (block of blocks(); track block.id) {
+        <app-schedule-block-card
+          [block]="block"
+          [professionalName]="getProfessionalLabel(block.professionalId)"
+          (edit)="openEditModal($event)"
+          (remove)="confirmDelete($event)"
+        />
+      }
+    </div>
+
+    <!-- Desktop table -->
+    <app-schedule-block-table
+      [rows]="rows()"
+      [isLoading]="false"
+      (edit)="openEditModal($event)"
+      (remove)="confirmDelete($event)"
+    />
+  }
+
+  <!-- Modal formulário -->
+  @if (showFormModal()) {
+    <div
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      (click)="closeFormModal()"
+    >
+      <div
+        class="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#1B2B5E] shadow-2xl animate-slide-up"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#1B2B5E]/95 backdrop-blur-sm">
+          <h3 class="text-lg font-black text-white">
+            @if (editingBlock()) { Editar bloqueio } @else { Novo bloqueio }
+          </h3>
+          <button
+            type="button"
+            class="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            (click)="closeFormModal()"
+            aria-label="Fechar"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-5">
+          <app-schedule-block-form
+            [professionals]="professionals()"
+            [block]="editingBlock()"
+            [isSaving]="isSaving()"
+            (save)="onSave($event)"
+            (cancel)="closeFormModal()"
+          />
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Confirmar exclusão -->
+  @if (showConfirmDelete()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      (click)="cancelDelete()"
+    >
+      <div
+        class="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1B2B5E] p-6 text-center shadow-2xl"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="w-14 h-14 bg-yellow-600/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-yellow-600/30">
+          <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <p class="text-white font-bold mb-2">Remover bloqueio?</p>
+        <p class="text-white/50 text-sm mb-6">Esta ação não pode ser desfeita.</p>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/70 bg-white/5 border border-white/10 hover:bg-white/10"
+            (click)="cancelDelete()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-colors"
+            (click)="executeDelete()"
+          >
+            Remover
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

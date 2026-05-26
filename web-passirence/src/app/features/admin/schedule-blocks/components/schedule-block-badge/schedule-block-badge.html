@@ -1,0 +1,12 @@
+<span
+  class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border transition-colors"
+  [class]="variant() === 'recurring'
+    ? 'bg-yellow-600/15 text-yellow-600 border-yellow-600/35'
+    : variant() === 'global'
+      ? 'bg-[#0066ff]/15 text-[#0066ff] border-[#0066ff]/35'
+      : variant() === 'professional'
+        ? 'bg-white/10 text-white/80 border-white/20'
+        : 'bg-black/30 text-white/60 border-white/10'"
+>
+  {{ label() }}
+</span>

@@ -1,0 +1,79 @@
+<div class="p-4 sm:p-6 lg:p-8 min-h-full">
+
+  <app-dashboard-header
+    [userName]="userName()"
+    [dateLabel]="dateLabel()"
+    (menuClick)="openMenu()"
+  />
+
+  @if (loadError()) {
+    <div class="mb-6 p-4 rounded-xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm">
+      {{ loadError() }}
+    </div>
+  }
+
+  <div class="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 lg:gap-8">
+    <div class="flex flex-col gap-6 lg:gap-8 min-w-0">
+      <!-- Métricas -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 animate-fade-up">
+        <app-dashboard-stats-card
+          label="Agendamentos hoje"
+          [value]="isLoading() ? '—' : appointmentsToday()"
+          subtitle="Total do dia"
+          icon="calendar"
+          accent="gold"
+        />
+        <app-dashboard-stats-card
+          label="Clientes ativos"
+          [value]="isLoading() ? '—' : activeClientsToday()"
+          subtitle="Com agendamento hoje"
+          icon="users"
+          accent="blue"
+        />
+        <app-dashboard-stats-card
+          label="Profissionais"
+          [value]="isLoading() ? '—' : activeProfessionals()"
+          subtitle="Ativos no sistema"
+          icon="scissors"
+          accent="blue"
+        />
+        <app-dashboard-stats-card
+          label="Serviços realizados"
+          [value]="isLoading() ? '—' : servicesPerformedToday()"
+          subtitle="Atendimentos do dia"
+          icon="chart"
+          accent="gold"
+        />
+      </section>
+
+      <!-- Resumo rápido -->
+      <section class="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-sm p-5 sm:p-6 animate-fade-up">
+        <h2 class="text-white font-bold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span class="w-1 h-4 bg-yellow-600 rounded-full"></span>
+          Visão do dia
+        </h2>
+        <p class="text-white/60 text-sm leading-relaxed max-w-2xl">
+          Acompanhe em tempo real os agendamentos da barbearia. Use o painel lateral para ver os próximos clientes
+          ou inicie um novo agendamento pelo fluxo público.
+        </p>
+        <div class="mt-5 flex flex-wrap gap-3">
+          <a
+            routerLink="/admin/agendamentos"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-white/10 border border-white/15 hover:bg-white/15 hover:border-yellow-600/40 transition-all duration-300"
+          >
+            Ver todos os agendamentos
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- Próximos agendamentos -->
+    <div class="xl:sticky xl:top-6 xl:self-start animate-fade-up">
+      <app-dashboard-appointments-list
+        [appointments]="upcomingAppointments()"
+        [isLoading]="isLoading()"
+        (newAppointment)="goToNewAppointment()"
+      />
+    </div>
+  </div>
+</div>

@@ -1,0 +1,139 @@
+<div class="p-4 sm:p-6 lg:p-8 min-h-full relative">
+
+  @if (showToast()) {
+    <div class="fixed top-4 right-4 left-4 sm:left-auto z-[70] sm:max-w-sm animate-fade-down" role="status">
+      <div
+        class="flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md"
+        [class]="toastType() === 'success' ? 'bg-[#1B2B5E]/95 border-yellow-600/40 text-white' : 'bg-red-950/90 border-red-400/40 text-red-100'"
+      >
+        <p class="text-sm font-medium flex-1">{{ toastMessage() }}</p>
+        <button type="button" class="text-white/50 hover:text-white" (click)="dismissToast()">×</button>
+      </div>
+    </div>
+  }
+
+  <app-appointment-header
+    [selectedDate]="selectedDate()"
+    [viewMode]="viewMode()"
+    [isLoading]="isLoading()"
+    (dateChange)="onDateChange($event)"
+    (viewModeChange)="onViewModeChange($event)"
+    (goToday)="goToday()"
+    (refresh)="refresh()"
+    (newAppointment)="openNewModal()"
+    (openFilters)="openFiltersDrawer()"
+  />
+
+  @if (loadError()) {
+    <div class="mb-4 p-4 rounded-xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm">
+      {{ loadError() }}
+      <button type="button" class="block mt-2 underline text-xs" (click)="refresh()">Tentar novamente</button>
+    </div>
+  }
+
+  <div class="flex flex-col lg:flex-row gap-6">
+  <!-- Filtros desktop -->
+    <div class="hidden lg:block w-72 shrink-0">
+      <app-appointment-filters-panel
+        [professionals]="professionals()"
+        [filters]="filters()"
+        (filtersChange)="onFiltersChange($event)"
+        (clearFilters)="clearFilters()"
+      />
+    </div>
+
+    <!-- Agenda principal -->
+    <div class="flex-1 min-w-0">
+      @if (!isLoading() && filteredEvents().length === 0) {
+        <div class="text-center py-16 rounded-2xl border border-white/10 bg-[#1B2B5E]/90 mb-4">
+          <p class="text-4xl mb-3">📅</p>
+          <h3 class="text-white font-bold text-lg mb-2">Nenhum agendamento encontrado</h3>
+          <p class="text-white/50 text-sm mb-6">Ajuste os filtros ou crie um novo agendamento.</p>
+          <button type="button" class="px-5 py-3 rounded-xl text-sm font-bold uppercase text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc]" (click)="openNewModal()">+ Novo agendamento</button>
+        </div>
+      }
+
+      @if (viewMode() === 'day') {
+        <app-appointment-calendar
+          [events]="filteredEvents()"
+          [blocks]="blocks()"
+          [openTime]="openTime()"
+          [closeTime]="closeTime()"
+          [slotInterval]="slotInterval()"
+          [isLoading]="isLoading()"
+          [professionalColumns]="professionalColumns()"
+          (selectEvent)="selectEvent($event)"
+        />
+      } @else {
+        <div class="hidden lg:grid grid-cols-1 xl:grid-cols-2 gap-3">
+          @for (event of mobileSortedEvents(); track event.id) {
+            <app-appointment-card [event]="event" (select)="selectEvent($event)" />
+          }
+        </div>
+      }
+
+      @if (viewMode() === 'day') {
+        <div class="lg:hidden mt-4 space-y-3">
+          @if (isLoading()) {
+            @for (i of [1, 2, 3]; track i) {
+              <div class="h-24 rounded-2xl bg-white/10 animate-pulse"></div>
+            }
+          } @else {
+            @for (event of mobileSortedEvents(); track event.id) {
+              <app-appointment-card [event]="event" (select)="selectEvent($event)" />
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Drawer filtros mobile -->
+  @if (showFiltersMobile()) {
+    <div class="fixed inset-0 z-50 lg:hidden" (click)="closeFiltersDrawer()">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+      <div class="absolute inset-y-0 left-0 w-[min(100%,320px)] p-4 overflow-y-auto" (click)="$event.stopPropagation()">
+        <app-appointment-filters-panel
+          [professionals]="professionals()"
+          [filters]="filters()"
+          (filtersChange)="onFiltersChange($event)"
+          (clearFilters)="clearFilters()"
+        />
+        <button type="button" class="w-full mt-4 py-3 rounded-xl text-sm font-bold text-white bg-[#0066ff]" (click)="closeFiltersDrawer()">Aplicar</button>
+      </div>
+    </div>
+  }
+
+  <app-appointment-details
+    [event]="selectedEvent()"
+    (close)="closeDetails()"
+    (edit)="onEditFromDetails($event)"
+    (cancel)="onCancelFromDetails($event)"
+    (complete)="onCompleteFromDetails($event)"
+  />
+
+  @if (showFormModal()) {
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" (click)="closeFormModal()">
+      <div class="w-full sm:max-w-lg max-h-[95vh] overflow-hidden rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#1B2B5E] shadow-2xl" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h3 class="text-lg font-black text-white">
+            @if (editingAppointment()) { Editar agendamento } @else { Novo agendamento }
+          </h3>
+          <button type="button" class="p-2 text-white/50 hover:text-white" (click)="closeFormModal()">×</button>
+        </div>
+        <div class="p-5">
+          <app-appointment-form
+            [appointment]="editingAppointment()"
+            [clients]="clients()"
+            [professionals]="professionals()"
+            [services]="services()"
+            [availableDates]="availableDates()"
+            [isSaving]="isSaving()"
+            (save)="onFormSave($event)"
+            (cancelled)="closeFormModal()"
+          />
+        </div>
+      </div>
+    </div>
+  }
+</div>

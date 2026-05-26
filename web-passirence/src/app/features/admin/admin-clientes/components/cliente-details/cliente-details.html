@@ -1,0 +1,30 @@
+<header class="rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md p-5 sm:p-6 animate-fade-down">
+  <button
+    type="button"
+    class="inline-flex items-center gap-2 text-white/50 hover:text-yellow-600 text-sm font-medium mb-4 transition-colors"
+    (click)="back.emit()"
+  >
+    ← Voltar para clientes
+  </button>
+
+  <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#0066ff] to-[#0052cc] flex items-center justify-center text-white font-black text-2xl ring-2 ring-yellow-600/30 shadow-lg">
+      {{ initials() }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight truncate">{{ cliente().nome }}</h1>
+      <p class="text-white/60 text-sm mt-1 tabular-nums">{{ phone() }}</p>
+      <div class="mt-3"><app-cliente-status-badge [ativo]="cliente().ativo" /></div>
+    </div>
+    <button
+      type="button"
+      class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all border border-white/10"
+      (click)="edit.emit()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+      Editar
+    </button>
+  </div>
+</header>

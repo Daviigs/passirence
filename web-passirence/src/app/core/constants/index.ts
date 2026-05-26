@@ -1,0 +1,1 @@
+export { TIME_CONFIG, VALIDATION, DAY_NAMES_SHORT, MONTH_NAMES_SHORT } from './time.config';

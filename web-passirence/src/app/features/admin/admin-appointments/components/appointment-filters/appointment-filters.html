@@ -1,0 +1,65 @@
+<aside class="rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md p-4 space-y-4 h-fit lg:sticky lg:top-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+      <span class="w-1 h-4 bg-yellow-600 rounded-full"></span>
+      Filtros
+    </h2>
+    <button type="button" class="text-[0.65rem] font-bold uppercase text-white/40 hover:text-yellow-600" (click)="clearFilters.emit()">Limpar</button>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Profissional</label>
+    <select
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm focus:outline-none focus:border-yellow-600/50"
+      [ngModel]="professionalValue()"
+      (ngModelChange)="onProfessionalChange($event)"
+    >
+      <option value="">Todos os profissionais</option>
+      @for (p of professionals(); track p.id) {
+        <option [value]="p.id">{{ p.nome }}</option>
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Status</label>
+    <select
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm focus:outline-none focus:border-yellow-600/50"
+      [ngModel]="filters().status"
+      (ngModelChange)="patch({ status: $event })"
+    >
+      @for (s of statusOptions; track s.value) {
+        <option [value]="s.value">{{ s.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-2">Período</label>
+    <div class="flex flex-wrap gap-2">
+      @for (p of periodOptions; track p.value) {
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-[0.65rem] font-bold uppercase tracking-wider border transition-all"
+          [class]="filters().period === p.value
+            ? 'bg-yellow-600/20 text-yellow-600 border-yellow-600/40'
+            : 'bg-black/20 text-white/50 border-white/10 hover:text-white'"
+          (click)="patch({ period: p.value })"
+        >
+          {{ p.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Busca</label>
+    <input
+      type="search"
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm placeholder-white/30 focus:outline-none focus:border-yellow-600/50"
+      placeholder="Cliente ou telefone..."
+      [ngModel]="filters().search"
+      (ngModelChange)="patch({ search: $event })"
+    />
+  </div>
+</aside>

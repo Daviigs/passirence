@@ -1,0 +1,25 @@
+<article class="rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md p-4 transition-all duration-300 hover:border-yellow-600/30 hover:shadow-lg">
+  <div class="flex items-start gap-3 mb-3">
+    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#0066ff] to-[#0052cc] flex items-center justify-center text-white font-bold ring-2 ring-yellow-600/20">
+      {{ initials() }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-white font-bold truncate">{{ row().nome }}</p>
+      <p class="text-white/50 text-sm tabular-nums">{{ phone() }}</p>
+    </div>
+    <app-cliente-status-badge [ativo]="row().ativo" />
+  </div>
+  <p class="text-white/40 text-xs mb-4">Último agendamento: <span class="text-white/70">{{ row().lastAppointmentLabel }}</span></p>
+  <div class="flex gap-2">
+    <a [routerLink]="['/admin/clientes', row().id]" class="flex-1 py-2 text-center text-xs font-bold uppercase tracking-wider rounded-lg bg-white/5 text-white/80 border border-white/10 hover:bg-yellow-600/10 hover:border-yellow-600/30 transition-all">Ver</a>
+    <button type="button" class="p-2 rounded-lg text-white/50 hover:text-[#0066ff] hover:bg-[#0066ff]/15" (click)="edit.emit(row())" title="Editar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    </button>
+    <button type="button" class="p-2 rounded-lg text-white/50 hover:text-yellow-600 hover:bg-yellow-600/10" (click)="toggle.emit(row())" title="Ativar/Desativar">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4"/></svg>
+    </button>
+    <button type="button" class="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10" (click)="remove.emit(row())" title="Excluir">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </button>
+  </div>
+</article>

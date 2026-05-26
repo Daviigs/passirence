@@ -1,0 +1,153 @@
+<div class="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0a2463] via-[#0d3b82] to-[#1a5f9a] py-12">
+  <div class="absolute -top-[30%] -right-[15%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] pointer-events-none"></div>
+
+  <div class="relative z-10 w-full max-w-4xl mx-auto px-6">
+    <!-- Voltar -->
+    <div class="mb-6 animate-fade-down">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white text-sm font-semibold uppercase tracking-wide border-2 border-white/50 rounded hover:bg-white/20 hover:border-white/80 hover:-translate-x-1 transition-all duration-300 cursor-pointer"
+      >
+        ← Voltar
+      </button>
+    </div>
+
+    <!-- Cabeçalho -->
+    <div class="text-center mb-10 animate-fade-up">
+      <div class="inline-block mb-4">
+        <span class="bg-white/10 text-white px-6 py-2 text-xs font-bold tracking-widest uppercase border border-white/30 rounded">
+          AGENDAR HORÁRIO
+        </span>
+      </div>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-4 tracking-tight">
+        Escolha o melhor<br>
+        <span class="relative inline-block">
+          Horário
+          <span class="absolute bottom-2 left-0 w-full h-1 bg-white -z-10"></span>
+        </span>
+      </h1>
+      <p class="text-lg text-blue-100/90 max-w-xl mx-auto leading-relaxed">
+        Selecione a data e o horário perfeito para seu atendimento
+      </p>
+    </div>
+
+    <!-- Seletor de datas -->
+    <div class="mb-8">
+      <h5 class="text-white font-bold text-xs uppercase tracking-widest mb-4">Escolha o dia</h5>
+
+      @if (isLoadingDates()) {
+        <div class="flex items-center justify-center h-24">
+          <div class="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+        </div>
+      } @else if (datesError()) {
+        <div class="text-center py-8 px-6 rounded-xl border border-red-300/30 bg-red-500/10 backdrop-blur-sm">
+          <p class="text-red-200">{{ datesError() }}</p>
+        </div>
+      } @else if (dates().length === 0) {
+        <div class="text-center py-8 px-6 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm">
+          <p class="text-blue-100/80">Nenhum dia disponível no momento. Verifique as configurações de funcionamento no admin.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto -mx-2 px-2 pb-2">
+          <div class="flex gap-3 min-w-max pb-1">
+            @for (date of dates(); track date.date.getTime()) {
+              <button
+                type="button"
+                (click)="selectDate(date)"
+                [class]="isDateSelected(date)
+                  ? 'relative z-10 flex-shrink-0 w-[90px] p-4 text-center rounded border-2 border-white bg-gradient-to-br from-white to-gray-50 shadow-[0_15px_50px_rgba(255,255,255,0.4),0_0_0_3px_rgba(255,255,255,0.8)] -translate-y-1 scale-[1.05] cursor-pointer transition-all duration-300'
+                  : 'relative flex-shrink-0 w-[90px] p-4 text-center rounded border border-white/30 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 hover:border-white hover:shadow-[0_10px_40px_rgba(255,255,255,0.2)] cursor-pointer transition-all duration-300'"
+              >
+                <div
+                  class="text-[0.65rem] font-bold uppercase tracking-widest mb-1.5"
+                  [class]="isDateSelected(date) ? 'text-[#257af8]' : 'text-blue-100/80'"
+                >
+                  {{ date.dayName }}
+                </div>
+                <div
+                  class="text-2xl font-black mb-0.5"
+                  [class]="isDateSelected(date) ? 'text-[#0066ff]' : 'text-white'"
+                >
+                  {{ date.dayNumber }}
+                </div>
+                <div
+                  class="text-[0.6rem] uppercase tracking-wide"
+                  [class]="isDateSelected(date) ? 'text-[#004db3]/80' : 'text-blue-100/60'"
+                >
+                  {{ date.monthYear }}
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Seletor de horários -->
+    @if (selectedDate(); as date) {
+      <div class="mb-8 animate-fade-up">
+        <h5 class="text-white font-bold text-xs uppercase tracking-widest mb-4">Escolha o horário</h5>
+
+        @if (isLoadingSlots()) {
+          <div class="flex items-center justify-center h-32">
+            <div class="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          </div>
+        } @else if (slotsError()) {
+          <div class="text-center py-10 px-6 rounded-xl border border-red-300/30 bg-red-500/10 backdrop-blur-sm">
+            <p class="text-red-200">{{ slotsError() }}</p>
+          </div>
+        } @else if (timeSlots().length === 0) {
+          <div class="text-center py-10 px-6 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm">
+            <p class="text-blue-100/80">Nenhum horário disponível para esta data</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            @for (slot of timeSlots(); track slot.time) {
+              <button
+                type="button"
+                (click)="selectTime(slot)"
+                [disabled]="!slot.available"
+                [class]="!slot.available
+                  ? 'relative flex flex-col items-center justify-center min-h-[72px] p-3 rounded-xl bg-white/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-transparent'
+                  : isTimeSelected(slot)
+                    ? 'relative flex flex-col items-center justify-center min-h-[72px] p-3 rounded-xl bg-white text-[#0066ff] border-[3px] border-white shadow-[0_10px_30px_rgba(255,255,255,0.5),0_0_0_1px_#0066ff] -translate-y-0.5 scale-105 z-10 cursor-pointer transition-all duration-300'
+                    : 'relative flex flex-col items-center justify-center min-h-[72px] p-3 rounded-xl bg-white/95 text-gray-800 border-2 border-transparent shadow-md hover:border-white hover:-translate-y-0.5 hover:shadow-lg cursor-pointer transition-all duration-300'"
+              >
+                @if (isTimeSelected(slot) && slot.available) {
+                  <span class="absolute top-1.5 right-1.5 w-5 h-5 bg-[#0066ff] text-white rounded-full text-xs font-bold flex items-center justify-center">✓</span>
+                }
+                <span class="text-lg font-bold">{{ slot.time }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @else if (!isLoadingDates()) {
+      <div class="text-center py-10 px-6 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm">
+        <p class="text-blue-100/70">Selecione uma data acima para ver os horários disponíveis</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Painel fixo de confirmar -->
+@if (selectedTime(); as time) {
+  @if (selectedDate(); as date) {
+    <div class="fixed bottom-5 right-5 z-[9999] max-w-sm w-[calc(100%-2.5rem)] sm:w-full animate-slide-up">
+      <div class="bg-white/95 backdrop-blur-sm p-5 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.3)] border-2 border-[#0066ff]/30">
+        <p class="text-xs text-gray-500 uppercase tracking-wide text-center mb-2">Agendamento selecionado</p>
+        <p class="text-center text-lg font-black text-[#0066ff] mb-4">
+          {{ date.dayNumber }}/{{ date.monthYear }} — {{ time.time }}
+        </p>
+        <button
+          type="button"
+          (click)="continue()"
+          class="w-full px-7 py-3.5 bg-[#0066ff] text-white text-sm font-black uppercase tracking-wide rounded-lg shadow-[0_4px_20px_rgba(0,102,255,0.3)] hover:bg-[#0052cc] hover:-translate-y-0.5 hover:shadow-[0_6px_30px_rgba(0,102,255,0.4)] transition-all duration-300 cursor-pointer"
+        >
+          Confirmar agendamento →
+        </button>
+      </div>
+    </div>
+  }
+}

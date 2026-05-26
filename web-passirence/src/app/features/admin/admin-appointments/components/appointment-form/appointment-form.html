@@ -1,0 +1,93 @@
+<form class="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1" (ngSubmit)="submit()">
+  @if (isEditMode() && !canEdit()) {
+    <p class="text-yellow-600 text-sm px-3 py-2 rounded-lg bg-yellow-600/10 border border-yellow-600/30">
+      Este agendamento não pode ser editado (cancelado ou finalizado).
+    </p>
+  }
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Cliente *</label>
+    <select
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm focus:outline-none focus:border-yellow-600/50"
+      [ngModel]="clientId()"
+      (ngModelChange)="clientId.set($event ? +$event : null)"
+      name="clientId"
+    >
+      <option [ngValue]="null">Selecione...</option>
+      @for (c of clients(); track c.id) {
+        <option [ngValue]="c.id">{{ c.nome }} — {{ c.telefone }}</option>
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-2">Serviços *</label>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+      @for (s of services(); track s.id) {
+        <button
+          type="button"
+          class="text-left p-3 rounded-xl border transition-all"
+          [class]="isServiceSelected(s.id)
+            ? 'bg-yellow-600/15 border-yellow-600/40 text-white'
+            : 'bg-black/20 border-white/10 text-white/70 hover:border-white/20'"
+          (click)="toggleService(s.id)"
+      [disabled]="!canEdit()"
+        >
+          <p class="font-bold text-sm">{{ s.nome }}</p>
+          <p class="text-xs opacity-70">{{ s.duracao }} min · R$ {{ s.preco }}</p>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Profissional *</label>
+    <select
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm focus:outline-none focus:border-yellow-600/50"
+      [ngModel]="professionalId()"
+      (ngModelChange)="professionalId.set($event ? +$event : null)"
+      name="professionalId"
+    >
+      <option [ngValue]="null">Selecione...</option>
+      @for (p of professionals(); track p.id) {
+        @if (p.ativo) {
+          <option [ngValue]="p.id">{{ p.nome }}</option>
+        }
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Data *</label>
+    <select
+      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm focus:outline-none focus:border-yellow-600/50"
+      [ngModel]="date()"
+      (ngModelChange)="date.set($event)"
+      name="date"
+    >
+      <option value="">Selecione uma data disponível...</option>
+      @for (d of availableDates(); track d) {
+        <option [value]="d">{{ d }}</option>
+      }
+    </select>
+  </div>
+
+  <app-available-times
+    [times]="availableTimes()"
+    [selectedTime]="startTime()"
+    [isLoading]="loadingTimes()"
+    (timeSelect)="startTime.set($event)"
+  />
+
+  @if (formError()) {
+    <p class="text-red-300 text-sm px-3 py-2 rounded-lg bg-red-500/10 border border-red-400/30">{{ formError() }}</p>
+  }
+
+  <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2 sticky bottom-0 bg-[#1B2B5E] pb-1">
+    <button type="button" class="flex-1 py-3 rounded-xl text-sm font-bold uppercase text-white/70 bg-white/5 border border-white/10" (click)="cancelled.emit()" [disabled]="isSaving()">Cancelar</button>
+  @if (canEdit()) {
+    <button type="submit" class="flex-1 py-3 rounded-xl text-sm font-bold uppercase text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] disabled:opacity-50" [disabled]="isSaving()">
+      @if (isSaving()) { Salvando... } @else if (isEditMode()) { Salvar alterações } @else { Confirmar agendamento }
+    </button>
+  }
+  </div>
+</form>

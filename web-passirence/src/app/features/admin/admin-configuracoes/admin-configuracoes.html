@@ -1,0 +1,154 @@
+<div class="p-5 lg:p-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Configurações</h1>
+      <p class="text-gray-500 text-sm mt-1">Fuso horário, intervalo de slots, lembretes e horários de funcionamento</p>
+    </div>
+    <button
+      (click)="saveSettings()"
+      [disabled]="isLoading() || isSaving()"
+      class="px-5 py-2.5 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+    >
+      @if (isSaving()) { Salvando... } @else { Salvar alterações }
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex items-center justify-center h-48">
+      <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0066ff] rounded-full animate-spin"></div>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Configurações gerais -->
+      <div class="bg-white/95 rounded-xl shadow-sm border border-white/20 overflow-hidden lg:col-span-2">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h2 class="text-base font-semibold text-gray-800">Configurações gerais</h2>
+          <p class="text-gray-500 text-xs mt-0.5">Parâmetros globais do agendamento</p>
+        </div>
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Fuso horário</label>
+            <select
+              [ngModel]="timezone()"
+              (ngModelChange)="timezone.set($event)"
+              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"
+            >
+              @for (tz of timezoneOptions; track tz) {
+                <option [value]="tz">{{ tz }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Intervalo de slots (min)</label>
+            <input
+              type="number"
+              [ngModel]="slotInterval()"
+              (ngModelChange)="slotInterval.set(+$event)"
+              min="1"
+              max="240"
+              step="5"
+              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"
+            />
+            <p class="text-xs text-gray-400 mt-1">Entre 1 e 240 minutos</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Lembrete (min antes)</label>
+            <input
+              type="number"
+              [ngModel]="reminderMinutes()"
+              (ngModelChange)="reminderMinutes.set(+$event)"
+              min="0"
+              step="5"
+              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"
+            />
+            <p class="text-xs text-gray-400 mt-1">{{ getReminderText() }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horários por dia da semana -->
+      <div class="bg-white/95 rounded-xl shadow-sm border border-white/20 overflow-hidden lg:col-span-2">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-semibold text-gray-800">Horários de funcionamento</h2>
+            <p class="text-gray-500 text-xs mt-0.5">
+              {{ getOpenDaysCount() }} dia{{ getOpenDaysCount() !== 1 ? 's' : '' }} aberto{{ getOpenDaysCount() !== 1 ? 's' : '' }} na semana
+            </p>
+          </div>
+        </div>
+
+        <div class="divide-y divide-gray-100">
+          @for (day of businessHours(); track day.weekday) {
+            <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div class="flex items-center gap-3 sm:w-40 shrink-0">
+                <button
+                  type="button"
+                  (click)="toggleDayOpen(day.weekday, !day.isOpen)"
+                  [class]="day.isOpen ? 'bg-[#0066ff]' : 'bg-gray-200'"
+                  class="relative w-11 h-6 rounded-full transition-colors cursor-pointer focus:outline-none shrink-0"
+                  [attr.aria-label]="day.isOpen ? 'Fechar ' + weekdayLabels[day.weekday] : 'Abrir ' + weekdayLabels[day.weekday]"
+                >
+                  <span
+                    [class]="day.isOpen ? 'translate-x-5' : 'translate-x-0.5'"
+                    class="absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform block"
+                  ></span>
+                </button>
+                <span class="text-sm font-semibold text-gray-800">{{ weekdayLabels[day.weekday] }}</span>
+              </div>
+
+              @if (day.isOpen) {
+                <div class="flex flex-1 gap-3 items-center">
+                  <div class="flex-1">
+                    <label class="block text-xs text-gray-500 mb-1">Abertura</label>
+                    <input
+                      type="time"
+                      [ngModel]="day.openTime"
+                      (ngModelChange)="updateDayTime(day.weekday, 'openTime', $event)"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"
+                    />
+                  </div>
+                  <span class="text-gray-400 mt-5">—</span>
+                  <div class="flex-1">
+                    <label class="block text-xs text-gray-500 mb-1">Fechamento</label>
+                    <input
+                      type="time"
+                      [ngModel]="day.closeTime"
+                      (ngModelChange)="updateDayTime(day.weekday, 'closeTime', $event)"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"
+                    />
+                  </div>
+                </div>
+              } @else {
+                <p class="text-sm text-gray-400 flex-1">Fechado</p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+</div>
+
+@if (showFeedbackModal()) {
+  <div
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    (click)="closeFeedbackModal()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" (click)="$event.stopPropagation()">
+      @if (feedbackType() === 'success') {
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-2xl">✓</div>
+      } @else {
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-2xl">!</div>
+      }
+      <p class="text-gray-800 font-medium mb-5">{{ feedbackMessage() }}</p>
+      <button
+        (click)="closeFeedbackModal()"
+        class="px-6 py-2.5 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+}

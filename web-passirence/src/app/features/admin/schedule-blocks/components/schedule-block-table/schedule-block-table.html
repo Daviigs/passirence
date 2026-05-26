@@ -1,0 +1,82 @@
+<div class="hidden lg:block rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden animate-fade-up">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/10 bg-black/20">
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Tipo</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Profissional</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Data</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Status</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Horário</th>
+          <th class="text-left px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Motivo</th>
+          <th class="text-right px-4 py-3 text-[0.65rem] font-bold text-white/40 uppercase tracking-widest">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (isLoading()) {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <tr class="border-b border-white/5">
+              @for (c of [1, 2, 3, 4, 5, 6, 7]; track c) {
+                <td class="px-4 py-4">
+                  <div class="h-4 rounded bg-white/10 animate-pulse"></div>
+                </td>
+              }
+            </tr>
+          }
+        } @else {
+          @for (row of rows(); track row.id) {
+            <tr class="border-b border-white/5 hover:bg-black/20 transition-colors duration-200 group">
+              <td class="px-4 py-4">
+                <span class="text-yellow-600 font-bold text-xs uppercase tracking-wide">{{ typeLabel(row) }}</span>
+              </td>
+              <td class="px-4 py-4 text-white font-medium">{{ row.professionalLabel }}</td>
+              <td class="px-4 py-4 text-white/70">{{ dateLabel(row) }}</td>
+              <td class="px-4 py-4">
+                <div class="flex flex-wrap gap-1">
+                  @if (row.isRecurring) {
+                    <app-schedule-block-badge label="Recorrente" variant="recurring" />
+                  } @else {
+                    <app-schedule-block-badge label="Avulso" variant="oneoff" />
+                  }
+                  @if (row.professionalId == null) {
+                    <app-schedule-block-badge label="Global" variant="global" />
+                  } @else {
+                    <app-schedule-block-badge label="Prof." variant="professional" />
+                  }
+                </div>
+              </td>
+              <td class="px-4 py-4">
+                <span class="text-white font-semibold tabular-nums">{{ timeLabel(row) }}</span>
+              </td>
+              <td class="px-4 py-4 text-white/50 max-w-[200px] truncate" [title]="row.reason">{{ row.reason || '—' }}</td>
+              <td class="px-4 py-4">
+                <div class="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    title="Editar"
+                    class="p-2 rounded-lg text-white/50 hover:text-[#0066ff] hover:bg-[#0066ff]/15 transition-all"
+                    (click)="edit.emit(row)"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    title="Remover"
+                    class="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    (click)="remove.emit(row)"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

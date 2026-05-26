@@ -1,0 +1,108 @@
+<div class="p-4 sm:p-6 lg:p-8 min-h-full relative">
+
+  @if (showToast()) {
+    <div class="fixed top-4 right-4 left-4 sm:left-auto z-[60] sm:max-w-sm animate-fade-down" role="status">
+      <div
+        class="flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md"
+        [class]="toastType() === 'success' ? 'bg-[#1B2B5E]/95 border-yellow-600/40 text-white' : 'bg-red-950/90 border-red-400/40 text-red-100'"
+      >
+        <p class="text-sm font-medium flex-1">{{ toastMessage() }}</p>
+        <button type="button" class="text-white/50 hover:text-white" (click)="dismissToast()">×</button>
+      </div>
+    </div>
+  }
+
+  <header class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 animate-fade-down">
+    <div class="flex items-start gap-3">
+      <button type="button" class="lg:hidden shrink-0 p-2.5 rounded-xl bg-black/25 border border-white/10 text-white hover:border-yellow-600/40 transition-all" aria-label="Abrir menu" (click)="openMenu()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <p class="text-white/50 text-xs font-bold uppercase tracking-[0.2em] mb-1">Administração</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Clientes</h1>
+        <p class="text-white/60 text-sm mt-1.5">Gerencie os clientes cadastrados da barbearia</p>
+      </div>
+    </div>
+    <button type="button" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] shadow-lg hover:-translate-y-0.5 transition-all border border-white/10 hover:border-yellow-600/30 shrink-0" (click)="openCreateModal()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Novo cliente
+    </button>
+  </header>
+
+  <div class="flex flex-col lg:flex-row gap-4 mb-6 animate-fade-up">
+    <div class="flex-1">
+      <app-cliente-search [value]="searchInput()" (searchChange)="onSearchChange($event)" />
+    </div>
+    <div class="flex flex-wrap gap-2">
+      @for (opt of [{ v: 'all', l: 'Todos' }, { v: 'active', l: 'Ativos' }, { v: 'inactive', l: 'Inativos' }]; track opt.v) {
+        <button
+          type="button"
+          class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all"
+          [class]="statusFilter() === opt.v
+            ? 'bg-yellow-600/20 text-yellow-600 border-yellow-600/40'
+            : 'bg-black/20 text-white/50 border-white/10 hover:border-white/20 hover:text-white'"
+          (click)="setStatusFilter($any(opt.v))"
+        >
+          {{ opt.l }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loadError()) {
+    <div class="mb-6 p-4 rounded-xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm">
+      {{ loadError() }}
+      <button type="button" class="block mt-2 text-white underline text-xs" (click)="loadClients()">Tentar novamente</button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="rounded-2xl border border-white/10 bg-[#1B2B5E]/60 p-4 animate-pulse h-32"></div>
+      }
+    </div>
+    <app-cliente-table [rows]="[]" [isLoading]="true" />
+  } @else if (filteredClients().length === 0) {
+    <div class="text-center py-16 px-6 rounded-2xl border border-white/10 bg-[#1B2B5E]/90">
+      <p class="text-4xl mb-3">👤</p>
+      <h3 class="text-white font-bold text-lg mb-2">Nenhum cliente encontrado</h3>
+      <p class="text-white/50 text-sm mb-6">Cadastre o primeiro cliente ou ajuste os filtros de busca.</p>
+      <button type="button" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc]" (click)="openCreateModal()">+ Novo cliente</button>
+    </div>
+  } @else {
+    <div class="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      @for (row of tableRows(); track row.id) {
+        <app-cliente-card [row]="row" (edit)="openEditModal($event)" (toggle)="onToggle($event)" (remove)="confirmDelete($event)" />
+      }
+    </div>
+    <app-cliente-table [rows]="tableRows()" [isLoading]="false" (edit)="openEditModal($event)" (toggle)="onToggle($event)" (remove)="confirmDelete($event)" />
+  }
+
+  @if (showFormModal()) {
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm" (click)="closeFormModal()">
+      <div class="w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#1B2B5E] shadow-2xl" (click)="$event.stopPropagation()">
+        <div class="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#1B2B5E]/95">
+          <h3 class="text-lg font-black text-white">@if (editingCliente()) { Editar cliente } @else { Novo cliente }</h3>
+          <button type="button" class="p-2 text-white/50 hover:text-white" (click)="closeFormModal()">×</button>
+        </div>
+        <div class="p-5">
+          <app-cliente-form [cliente]="editingCliente()" [isSaving]="isSaving()" (save)="onSave($event)" (cancel)="closeFormModal()" />
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showConfirmDelete()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" (click)="cancelDelete()">
+      <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1B2B5E] p-6 text-center shadow-2xl" (click)="$event.stopPropagation()">
+        <p class="text-white font-bold mb-2">Remover cliente?</p>
+        <p class="text-white/50 text-sm mb-6">{{ pendingDelete()?.nome }}</p>
+        <div class="flex gap-3">
+          <button type="button" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/70 bg-white/5 border border-white/10" (click)="cancelDelete()">Cancelar</button>
+          <button type="button" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500" (click)="executeDelete()">Remover</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
