@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.npm
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+storage/auth/
+!storage/auth/.gitkeep
+
+logs/
+*.log
+npm-debug.log*

@@ -1,4 +1,58 @@
 # Cursor (agent skills, local metadata)
 .cursor/
 
+# Local / audit
 AUDITORIA_TECNICA.md
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+dist/
+.npm
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# API WhatsApp — credenciais e sessão Baileys
+api-whatsapp/storage/auth/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+api-passirence/bin/
+api-passirence/tmp/
+
+# Angular / frontend
+.angular/
+coverage/
+out-tsc/
+__screenshots__/
+
+# IDEs e editores
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
