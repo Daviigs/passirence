@@ -1,0 +1,91 @@
+<section class="flex flex-col h-full min-h-[320px] rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden">
+  <div class="px-4 py-4 border-b border-white/10 bg-black/15 space-y-3">
+    <div class="flex items-start justify-between gap-2">
+      <div>
+        <h2 class="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+          <span class="w-1 h-4 bg-yellow-600 rounded-full"></span>
+          Lista do dia
+        </h2>
+        @if (dateLabel()) {
+          <p class="text-white/50 text-xs mt-1 font-medium">{{ dateLabel() }}</p>
+        }
+      </div>
+      <button
+        type="button"
+        class="shrink-0 p-2 rounded-lg text-yellow-600 bg-yellow-600/10 border border-yellow-600/30 hover:bg-yellow-600/20 transition-all"
+        title="Novo agendamento"
+        (click)="newAppointment.emit()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+    </div>
+
+    @if (businessHours()) {
+      <p class="text-[0.65rem] text-white/40 uppercase tracking-wider">
+        Expediente <span class="text-white/70 font-semibold tabular-nums">{{ businessHours() }}</span>
+      </p>
+    }
+
+    <div class="grid grid-cols-3 gap-2">
+      <div class="rounded-xl bg-black/25 border border-white/5 px-2 py-2 text-center">
+        <p class="text-lg font-black text-white tabular-nums">{{ summary().total }}</p>
+        <p class="text-[0.6rem] text-white/40 uppercase tracking-wider">Total</p>
+      </div>
+      <div class="rounded-xl bg-green-500/10 border border-green-500/20 px-2 py-2 text-center">
+        <p class="text-lg font-black text-green-400 tabular-nums">{{ summary().confirmed }}</p>
+        <p class="text-[0.6rem] text-white/40 uppercase tracking-wider">Ativos</p>
+      </div>
+      <div class="rounded-xl bg-[#0066ff]/10 border border-[#0066ff]/25 px-2 py-2 text-center">
+        <p class="text-lg font-black text-[#6eb5ff] tabular-nums">{{ summary().completed }}</p>
+        <p class="text-[0.6rem] text-white/40 uppercase tracking-wider">Feitos</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 flex flex-col min-h-0 xl:max-h-[calc(100vh-220px)]">
+    <div class="flex-1 overflow-y-auto p-3 space-y-2 min-h-[140px]">
+      @if (isLoading()) {
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="h-20 rounded-xl bg-white/10 animate-pulse"></div>
+        }
+      } @else if (events().length === 0) {
+        <div class="text-center py-10 px-4">
+          <p class="text-3xl mb-2 opacity-80">📋</p>
+          <p class="text-white/70 text-sm font-semibold mb-1">Nenhum agendamento</p>
+          <p class="text-white/40 text-xs mb-4">Crie um novo ou ajuste os filtros.</p>
+          <button
+            type="button"
+            class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc]"
+            (click)="newAppointment.emit()"
+          >
+            + Novo
+          </button>
+        </div>
+      } @else {
+        @for (event of events(); track event.id) {
+          <div
+            class="rounded-xl transition-all"
+            [class.ring-2]="selected()?.id === event.id"
+            [class.ring-yellow-600/50]="selected()?.id === event.id"
+          >
+            <app-appointment-card [event]="event" (select)="select.emit($event)" />
+          </div>
+        }
+      }
+    </div>
+
+    <div class="hidden xl:block border-t border-white/10 bg-black/20 p-3 max-h-[45%] overflow-y-auto">
+      <app-appointment-details
+        layout="embedded"
+        [event]="selected()"
+        [loading]="isLoadingDetails()"
+        (close)="closeDetails.emit()"
+        (edit)="edit.emit($event)"
+        (cancel)="cancel.emit($event)"
+        (complete)="complete.emit($event)"
+      />
+    </div>
+  </div>
+</section>

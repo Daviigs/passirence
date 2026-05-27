@@ -1,61 +1,127 @@
-<header class="flex flex-col gap-4 mb-6 animate-fade-down">
-  <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-    <div class="flex items-start gap-3">
+<header class="mb-6 space-y-4 animate-fade-down">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div class="flex items-start gap-3 min-w-0">
       <button
         type="button"
         class="lg:hidden shrink-0 p-2.5 rounded-xl bg-black/25 border border-white/10 text-white hover:border-yellow-600/40 transition-all"
-        aria-label="Abrir menu"
+        aria-label="Abrir filtros"
         (click)="openFilters.emit()"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <div>
+
+      <div class="min-w-0">
         <p class="text-white/50 text-xs font-bold uppercase tracking-[0.2em] mb-1">Administração</p>
         <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Agendamentos</h1>
-        <p class="text-white/60 text-sm mt-1">Gerencie a agenda da barbearia</p>
+        <p class="text-white/60 text-sm mt-1">Gerencie os atendimentos da barbearia</p>
+        @if (summaryLine()) {
+          <p class="text-yellow-600/90 text-sm font-semibold mt-2 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-yellow-600 animate-pulse"></span>
+            {{ summaryLine() }}
+          </p>
+        }
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <input
-        type="date"
-        class="px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm [color-scheme:dark] focus:outline-none focus:border-yellow-600/50"
-        [ngModel]="selectedDate()"
-        (ngModelChange)="dateChange.emit($event)"
-      />
-      <button type="button" class="px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white/70 bg-white/5 border border-white/10 hover:bg-white/10 transition-all" (click)="goToday.emit()">
-        Hoje
-      </button>
-      <button type="button" class="p-2.5 rounded-xl text-white/60 bg-white/5 border border-white/10 hover:text-yellow-600 hover:border-yellow-600/40 transition-all" title="Atualizar" (click)="refresh.emit()" [disabled]="isLoading()">
-        <svg class="w-5 h-5" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    <button
+      type="button"
+      class="lg:hidden w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] border border-white/10 shadow-lg shadow-[#0066ff]/20"
+      (click)="newAppointment.emit()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Novo agendamento
+    </button>
+
+    <div class="hidden lg:flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all border border-white/10 shadow-lg shadow-[#0066ff]/20"
+        (click)="newAppointment.emit()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-      </button>
-      <button type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all border border-white/10" (click)="newAppointment.emit()">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Novo agendamento
       </button>
     </div>
   </div>
 
-  <div class="flex gap-2">
-    <button
-      type="button"
-      class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all"
-      [class]="viewMode() === 'day' ? 'bg-yellow-600/20 text-yellow-600 border-yellow-600/40' : 'bg-black/20 text-white/50 border-white/10'"
-      (click)="viewModeChange.emit('day')"
-    >
-      Dia
-    </button>
-    <button
-      type="button"
-      class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all"
-      [class]="viewMode() === 'week' ? 'bg-yellow-600/20 text-yellow-600 border-yellow-600/40' : 'bg-black/20 text-white/50 border-white/10'"
-      (click)="viewModeChange.emit('week')"
-    >
-      Semana
-    </button>
+  <div class="rounded-2xl border border-white/10 bg-[#1B2B5E]/80 backdrop-blur-md p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+    <div class="flex items-center gap-1 shrink-0">
+      <button
+        type="button"
+        class="p-2.5 rounded-xl text-white/60 bg-black/25 border border-white/10 hover:text-yellow-600 hover:border-yellow-600/40 transition-all"
+        title="Dia anterior"
+        (click)="prevDay.emit()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <input
+        type="date"
+        class="px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm min-w-[140px] [color-scheme:dark] focus:outline-none focus:border-yellow-600/50"
+        [ngModel]="selectedDate()"
+        (ngModelChange)="dateChange.emit($event)"
+      />
+      <button
+        type="button"
+        class="p-2.5 rounded-xl text-white/60 bg-black/25 border border-white/10 hover:text-yellow-600 hover:border-yellow-600/40 transition-all"
+        title="Próximo dia"
+        (click)="nextDay.emit()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-yellow-600 bg-yellow-600/10 border border-yellow-600/30 hover:bg-yellow-600/20 transition-all"
+        (click)="goToday.emit()"
+      >
+        Hoje
+      </button>
+    </div>
+
+    @if (dateLabel()) {
+      <p class="text-white/50 text-xs sm:text-sm font-medium flex-1 min-w-0 truncate">{{ dateLabel() }}</p>
+    }
+
+    <div class="flex items-center gap-2 sm:ml-auto">
+      <div class="flex rounded-xl border border-white/10 overflow-hidden bg-black/20 p-0.5">
+        <button
+          type="button"
+          class="px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider transition-all rounded-lg"
+          [class]="viewMode() === 'day' ? 'bg-yellow-600/25 text-yellow-600' : 'text-white/45 hover:text-white'"
+          (click)="viewModeChange.emit('day')"
+        >
+          Dia
+        </button>
+        <button
+          type="button"
+          class="px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wider transition-all rounded-lg"
+          [class]="viewMode() === 'week' ? 'bg-yellow-600/25 text-yellow-600' : 'text-white/45 hover:text-white'"
+          (click)="viewModeChange.emit('week')"
+        >
+          Semana
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="p-2.5 rounded-xl text-white/60 bg-black/25 border border-white/10 hover:text-yellow-600 hover:border-yellow-600/40 transition-all disabled:opacity-40"
+        title="Atualizar"
+        (click)="refresh.emit()"
+        [disabled]="isLoading()"
+      >
+        <svg class="w-5 h-5" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+    </div>
   </div>
 </header>

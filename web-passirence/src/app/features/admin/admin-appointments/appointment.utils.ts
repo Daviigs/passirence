@@ -96,6 +96,35 @@ export function isAppointmentEditable(status: string): boolean {
   return status !== 'cancelled' && status !== 'canceled' && status !== 'finished' && status !== 'completed';
 }
 
+export function isTerminalStatus(status: string): boolean {
+  return status === 'cancelled' || status === 'canceled' || status === 'finished' || status === 'completed';
+}
+
+export function buildDaySummary(events: AppointmentCalendarEvent[]): {
+  total: number;
+  active: number;
+  confirmed: number;
+  completed: number;
+} {
+  const completed = events.filter(
+    (e) => e.status === 'finished' || e.status === 'completed',
+  ).length;
+  const cancelled = events.filter(
+    (e) => e.status === 'cancelled' || e.status === 'canceled',
+  ).length;
+  const active = events.length - completed - cancelled;
+  const confirmed = events.filter(
+    (e) => e.status === 'confirmed' || e.status === 'scheduled',
+  ).length;
+
+  return {
+    total: events.length,
+    active,
+    confirmed,
+    completed,
+  };
+}
+
 export function blockAppliesToDate(block: ScheduleBlock, isoDate: string): boolean {
   const date = DateUtils.parseISODate(isoDate);
   if (block.isRecurring && block.weekDay !== null && block.weekDay !== undefined) {

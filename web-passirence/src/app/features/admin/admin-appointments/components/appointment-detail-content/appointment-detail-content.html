@@ -1,0 +1,85 @@
+<div class="flex flex-col flex-1 min-h-0 h-full">
+<div class="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0" [class.px-5]="!compact()" [class.py-4]="!compact()">
+  <h3 class="font-black text-white" [class.text-lg]="!compact()" [class.text-base]="compact()">Detalhes</h3>
+  <button
+    type="button"
+    class="p-2 text-white/50 hover:text-white rounded-lg hover:bg-white/5"
+    (click)="close.emit()"
+    aria-label="Fechar"
+  >
+    ×
+  </button>
+</div>
+
+<div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0" [class.p-5]="!compact()" [class.space-y-5]="!compact()">
+  <div>
+    <p class="text-white font-black" [class.text-xl]="!compact()" [class.text-lg]="compact()">
+      {{ appointment().clientName }}
+    </p>
+    <p class="text-white/60 text-sm mt-0.5">{{ phoneDisplay() }}</p>
+    <div class="mt-2">
+      <app-appointment-status-badge
+        [status]="appointment().status"
+        [label]="appointment().statusLabel"
+      />
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2" [class.gap-3]="!compact()">
+    <div class="rounded-xl bg-black/20 p-2.5 border border-white/5" [class.p-3]="!compact()">
+      <p class="text-white/40 text-[0.65rem] uppercase tracking-wider mb-0.5">Data</p>
+      <p class="text-white font-semibold text-sm">{{ appointment().date }}</p>
+    </div>
+    <div class="rounded-xl bg-black/20 p-2.5 border border-white/5" [class.p-3]="!compact()">
+      <p class="text-white/40 text-[0.65rem] uppercase tracking-wider mb-0.5">Horário</p>
+      <p class="text-yellow-600 font-bold tabular-nums text-sm">
+        {{ appointment().startTime.slice(0, 5) }} — {{ appointment().endTime.slice(0, 5) }}
+      </p>
+    </div>
+  </div>
+
+  <div class="rounded-xl bg-black/20 p-2.5 border border-white/5" [class.p-3]="!compact()">
+    <p class="text-white/40 text-[0.65rem] uppercase tracking-wider mb-0.5">Profissional</p>
+    <p class="text-white font-medium text-sm">{{ appointment().professionalName }}</p>
+  </div>
+
+  <div class="rounded-xl bg-black/20 p-2.5 border border-white/5" [class.p-3]="!compact()">
+    <p class="text-white/40 text-[0.65rem] uppercase tracking-wider mb-0.5">Serviços</p>
+    <p class="text-white font-medium text-sm">{{ appointment().serviceLabel }}</p>
+  </div>
+</div>
+
+<div class="p-4 border-t border-white/10 flex flex-col gap-2 shrink-0" [class.p-5]="!compact()">
+  @if (editable()) {
+    <button
+      type="button"
+      class="w-full py-2.5 rounded-xl text-xs font-bold uppercase text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] transition-all hover:-translate-y-0.5"
+      [class.py-3]="!compact()"
+      [class.text-sm]="!compact()"
+      (click)="edit.emit()"
+    >
+      Editar
+    </button>
+    <button
+      type="button"
+      class="w-full py-2.5 rounded-xl text-xs font-bold uppercase text-yellow-600 bg-yellow-600/10 border border-yellow-600/30"
+      [class.py-3]="!compact()"
+      [class.text-sm]="!compact()"
+      (click)="complete.emit()"
+    >
+      Finalizar
+    </button>
+    <button
+      type="button"
+      class="w-full py-2.5 rounded-xl text-xs font-bold uppercase text-red-400 bg-red-500/10 border border-red-400/30"
+      [class.py-3]="!compact()"
+      [class.text-sm]="!compact()"
+      (click)="cancel.emit()"
+    >
+      Cancelar
+    </button>
+  } @else {
+    <p class="text-center text-white/40 text-xs py-2">Encerrado — sem ações.</p>
+  }
+</div>
+</div>

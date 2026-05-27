@@ -1,4 +1,4 @@
-<div class="hidden lg:block rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden">
+<div class="hidden lg:block rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md overflow-hidden shadow-xl shadow-black/20">
   @if (isLoading()) {
     <div class="p-8 space-y-3">
       @for (i of [1, 2, 3, 4, 5]; track i) {
@@ -6,45 +6,64 @@
       }
     </div>
   } @else {
-    <div class="flex border-b border-white/10 bg-black/20 overflow-x-auto">
-      <div class="w-16 shrink-0"></div>
+    <div class="flex border-b border-white/10 bg-black/25 overflow-x-auto">
+      <div class="w-14 shrink-0 flex items-center justify-center border-r border-white/5">
+        <span class="text-[0.6rem] text-white/30 uppercase font-bold tracking-wider -rotate-0">Hora</span>
+      </div>
       @for (col of professionalColumns(); track col.id ?? 'all') {
-        <div class="flex-1 min-w-[200px] px-3 py-3 text-center border-l border-white/5">
+        <div class="flex-1 min-w-[180px] px-3 py-3 text-center border-l border-white/5">
           <p class="text-white font-bold text-xs uppercase tracking-wider truncate">{{ col.label }}</p>
         </div>
       }
     </div>
 
-    <div class="flex overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto">
-      <div class="w-16 shrink-0 border-r border-white/10 bg-black/15">
+    <div class="flex overflow-x-auto max-h-[min(720px,calc(100vh-240px))] overflow-y-auto">
+      <div class="w-14 shrink-0 border-r border-white/10 bg-black/20 relative">
         @for (slot of slots(); track slot.minutes) {
-          <div class="h-12 pr-2 flex items-start justify-end border-b border-white/5">
-            <span class="text-[0.65rem] text-white/30 font-medium tabular-nums">{{ slot.label }}</span>
+          <div class="h-12 pr-1.5 flex items-start justify-end border-b border-white/5">
+            <span class="text-[0.65rem] text-white/35 font-medium tabular-nums">{{ slot.label }}</span>
+          </div>
+        }
+        @if (currentTimeTop(); as top) {
+          <div
+            class="absolute left-0 right-0 z-30 pointer-events-none flex items-center"
+            [style.top]="top"
+          >
+            <span class="w-full h-0.5 bg-yellow-600 shadow-[0_0_8px_rgba(202,138,4,0.8)]"></span>
           </div>
         }
       </div>
 
       @for (col of professionalColumns(); track col.id ?? 'all') {
-        <div class="flex-1 min-w-[200px] relative border-l border-white/5" [style.min-height.px]="gridHeight()">
+        <div class="flex-1 min-w-[180px] relative border-l border-white/5 bg-black/5" [style.min-height.px]="gridHeight()">
           @for (slot of slots(); track slot.minutes) {
-            <div class="h-12 border-b border-white/5"></div>
+            <div class="h-12 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"></div>
+          }
+
+          @if (currentTimeTop(); as top) {
+            <div
+              class="absolute left-0 right-0 z-[15] pointer-events-none"
+              [style.top]="top"
+            >
+              <div class="h-0.5 bg-yellow-600/80 w-full"></div>
+            </div>
           }
 
           @for (block of blocksForColumn(col.id); track block.id) {
             <div
-              class="absolute left-1 right-1 rounded-lg bg-white/10 border border-white/15 border-dashed px-2 py-1 overflow-hidden z-10"
+              class="absolute left-1 right-1 rounded-lg bg-white/8 border border-dashed border-white/20 px-2 py-1 overflow-hidden z-10"
               [style.top]="blockTop(block)"
               [style.height]="blockHeight(block)"
               [title]="block.reason"
             >
-              <p class="text-[0.6rem] text-white/50 uppercase font-bold truncate">Bloqueio</p>
-              <p class="text-[0.65rem] text-white/70 truncate">{{ block.reason }}</p>
+              <p class="text-[0.6rem] text-white/45 uppercase font-bold truncate">Bloqueio</p>
+              <p class="text-[0.65rem] text-white/65 truncate">{{ block.reason || 'Indisponível' }}</p>
             </div>
           }
 
           @for (event of eventsForColumn(col.id); track event.id) {
             <div
-              class="absolute left-1 right-1 z-20 min-h-[44px]"
+              class="absolute left-1 right-1 z-20 min-h-[40px]"
               [style.top]="top(event)"
               [style.height]="height(event)"
             >

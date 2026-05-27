@@ -22,6 +22,7 @@ export class AppointmentCalendar {
   closeTime = input('18:00');
   slotInterval = input(30);
   isLoading = input(false);
+  showCurrentTime = input(false);
   professionalColumns = input<{ id: number | null; label: string }[]>([{ id: null, label: 'Agenda' }]);
 
   selectEvent = output<AppointmentCalendarEvent>();
@@ -30,6 +31,17 @@ export class AppointmentCalendar {
   dayStart = () => timeToMinutes(this.openTime());
   dayEnd = () => timeToMinutes(this.closeTime());
   gridHeight = () => Math.max(this.slots().length * 48, 400);
+
+  currentTimeTop = (): string | null => {
+    if (!this.showCurrentTime()) return null;
+    const now = new Date();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const start = this.dayStart();
+    const end = this.dayEnd();
+    if (minutes < start || minutes > end) return null;
+    const pct = ((minutes - start) / (end - start)) * 100;
+    return `${pct}%`;
+  };
 
   eventsForColumn(professionalId: number | null): AppointmentCalendarEvent[] {
     return this.events().filter((e) =>

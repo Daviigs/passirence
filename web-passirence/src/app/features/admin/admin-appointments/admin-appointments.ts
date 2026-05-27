@@ -20,8 +20,14 @@ import {
   AppointmentFilters,
   AppointmentViewMode,
 } from './models/appointment-view.model';
-import { formatAppointmentStatus, matchesSearch, matchesStatusFilter } from './appointment.utils';
+import {
+  buildDaySummary,
+  formatAppointmentStatus,
+  matchesSearch,
+  matchesStatusFilter,
+} from './appointment.utils';
 import { AppointmentHeader } from './components/appointment-header/appointment-header';
+import { AppointmentDayPanel } from './components/appointment-day-panel/appointment-day-panel';
 import { AppointmentFiltersPanel } from './components/appointment-filters/appointment-filters';
 import { AppointmentCalendar } from './components/appointment-calendar/appointment-calendar';
 import { AppointmentCard } from './components/appointment-card/appointment-card';
@@ -42,6 +48,7 @@ type ToastType = 'success' | 'error';
     AppointmentCard,
     AppointmentDetails,
     AppointmentForm,
+    AppointmentDayPanel,
   ],
   templateUrl: './admin-appointments.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -120,6 +127,27 @@ export class AdminAppointments implements OnInit {
     }),
   );
 
+  selectedDateLabel = computed(() => DateUtils.formatToLongBrazilian(this.selectedDate()));
+
+  isSelectedToday = computed(
+    () => this.selectedDate() === DateUtils.formatToISO(new Date()),
+  );
+
+  daySummary = computed(() => buildDaySummary(this.mobileSortedEvents()));
+
+  summaryLine = computed(() => {
+    const count = this.daySummary().total;
+    const label = count === 1 ? 'agendamento' : 'agendamentos';
+    if (this.isSelectedToday()) {
+      return `${count} ${label} hoje`;
+    }
+    return `${count} ${label} neste dia`;
+  });
+
+  businessHoursLabel = computed(
+    () => `${this.openTime()} — ${this.closeTime()} · ${this.slotInterval()} min`,
+  );
+
   /** Clientes ativos para novo agendamento; inclui o cliente do agendamento em edição se estiver inativo. */
   formClients = computed(() => {
     const list = this.clients();
@@ -168,6 +196,20 @@ export class AdminAppointments implements OnInit {
 
   goToday(): void {
     this.selectedDate.set(DateUtils.formatToISO(new Date()));
+    this.filters.update((f) => ({ ...f, period: 'today' }));
+    this.refresh();
+  }
+
+  prevDay(): void {
+    const d = DateUtils.parseISODate(this.selectedDate());
+    this.selectedDate.set(DateUtils.formatToISO(DateUtils.addDays(d, -1)));
+    this.filters.update((f) => ({ ...f, period: 'today' }));
+    this.refresh();
+  }
+
+  nextDay(): void {
+    const d = DateUtils.parseISODate(this.selectedDate());
+    this.selectedDate.set(DateUtils.formatToISO(DateUtils.addDays(d, 1)));
     this.filters.update((f) => ({ ...f, period: 'today' }));
     this.refresh();
   }

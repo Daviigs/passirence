@@ -12,10 +12,14 @@ export class AppointmentHeader {
   selectedDate = input('');
   viewMode = input<AppointmentViewMode>('day');
   isLoading = input(false);
+  dateLabel = input('');
+  summaryLine = input('');
 
   dateChange = output<string>();
   viewModeChange = output<AppointmentViewMode>();
   goToday = output<void>();
+  prevDay = output<void>();
+  nextDay = output<void>();
   refresh = output<void>();
   newAppointment = output<void>();
   openFilters = output<void>();
