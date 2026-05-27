@@ -174,7 +174,13 @@ func (s *AppointmentService) GetAvailableTimes(
 		busy,
 	)
 
-	return schedule.FilterAvailableSlots(candidates, totalDuration, busy), nil
+	available := schedule.FilterAvailableSlots(candidates, totalDuration, busy)
+	return filterPastSlotsForToday(date, loc, available), nil
+}
+
+// filterPastSlotsForToday removes slots that already passed when the selected date is today.
+func filterPastSlotsForToday(date string, loc *time.Location, slots []string) []string {
+	return schedule.FilterPastSlotsForToday(date, loc, slots, time.Now())
 }
 
 func (s *AppointmentService) CreateAppointment(

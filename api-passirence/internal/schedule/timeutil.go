@@ -133,6 +133,40 @@ func FilterAvailableSlots(slots []int, duration int, busy []TimeRange) []string 
 	return result
 }
 
+// FilterPastSlotsForToday removes slots strictly before the current clock time (minute precision)
+// when date is the same calendar day as now in loc. Future dates are returned unchanged.
+func FilterPastSlotsForToday(date string, loc *time.Location, slots []string, now time.Time) []string {
+	if len(slots) == 0 {
+		return slots
+	}
+
+	parsedDate, err := ParseDate(date, loc)
+	if err != nil {
+		return slots
+	}
+
+	nowInLoc := now.In(loc)
+	today := time.Date(nowInLoc.Year(), nowInLoc.Month(), nowInLoc.Day(), 0, 0, 0, 0, loc)
+	selectedDay := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, loc)
+	if !selectedDay.Equal(today) {
+		return slots
+	}
+
+	currentMinutes := nowInLoc.Hour()*60 + nowInLoc.Minute()
+	filtered := make([]string, 0, len(slots))
+	for _, slot := range slots {
+		minutes, err := MinutesFromTime(slot)
+		if err != nil {
+			continue
+		}
+		if minutes >= currentMinutes {
+			filtered = append(filtered, slot)
+		}
+	}
+
+	return filtered
+}
+
 func ToTimeRanges(startTime, endTime string) (TimeRange, error) {
 	start, err := MinutesFromTime(startTime)
 	if err != nil {
