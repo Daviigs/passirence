@@ -8,6 +8,13 @@ export type {
   AppointmentCreated,
   AppointmentListFilters,
 } from './appointment-request.model';
-export type { AdminAppointment, AppointmentServiceItem, AppointmentStatus } from './admin-appointment.model';
+export type { AdminAppointment, AppointmentServiceItem } from './admin-appointment.model';
+export type { AppointmentStatus } from './appointment-status';
+export {
+  normalizeAppointmentStatus,
+  formatAppointmentStatusLabel,
+  isAppointmentEditable,
+  isTerminalAppointmentStatus,
+} from './appointment-status';
 export type { ClientAppointment } from './client-appointment.model';
 export type { ApiResponse } from './api-response.model';

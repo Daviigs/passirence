@@ -1,14 +1,9 @@
 import { AdminAppointment } from '../../../../core/models';
+import { AppointmentStatus } from '../../../../core/models/appointment-status';
 
 export type AppointmentViewMode = 'day' | 'week';
 
-export type AppointmentStatusFilter =
-  | 'all'
-  | 'scheduled'
-  | 'confirmed'
-  | 'pending'
-  | 'cancelled'
-  | 'completed';
+export type AppointmentStatusFilter = 'all' | AppointmentStatus;
 
 export type AppointmentPeriodFilter = 'today' | 'tomorrow' | 'week' | 'month';
 

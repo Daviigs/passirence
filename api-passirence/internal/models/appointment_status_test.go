@@ -2,52 +2,64 @@ package models
 
 import "testing"
 
-func TestAppointmentBlocksSchedule(t *testing.T) {
-	blocking := []string{
-		"scheduled",
-		"confirmed",
-		"in_progress",
-		"in-progress",
-		"pending",
-		" Scheduled ",
-	}
-	for _, status := range blocking {
-		if !AppointmentBlocksSchedule(status) {
-			t.Fatalf("expected %q to block schedule", status)
-		}
+func TestNormalizeAppointmentStatus_legacy(t *testing.T) {
+	cases := map[string]string{
+		"confirmed":    AppointmentStatusScheduled,
+		"in_progress":  AppointmentStatusScheduled,
+		"pending":      AppointmentStatusScheduled,
+		"finished":     AppointmentStatusCompleted,
+		"canceled":     AppointmentStatusCancelled,
+		"cancelado":    AppointmentStatusCancelled,
+		"scheduled":    AppointmentStatusScheduled,
+		"completed":    AppointmentStatusCompleted,
+		"cancelled":    AppointmentStatusCancelled,
 	}
 
-	nonBlocking := []string{
-		"cancelled",
-		"canceled",
-		"finished",
-		"completed",
-		"no_show",
-		"no-show",
-		" Cancelled ",
-		"",
-		"unknown",
+	for input, want := range cases {
+		if got := NormalizeAppointmentStatus(input); got != want {
+			t.Fatalf("NormalizeAppointmentStatus(%q) = %q, want %q", input, got, want)
+		}
 	}
-	for _, status := range nonBlocking {
+}
+
+func TestAppointmentBlocksSchedule(t *testing.T) {
+	if !AppointmentBlocksSchedule("scheduled") {
+		t.Fatal("scheduled must block")
+	}
+	if !AppointmentBlocksSchedule("confirmed") {
+		t.Fatal("legacy confirmed must block as scheduled")
+	}
+	for _, status := range []string{"cancelled", "canceled", "completed", "finished", "no_show"} {
 		if AppointmentBlocksSchedule(status) {
-			t.Fatalf("expected %q to NOT block schedule", status)
+			t.Fatalf("%q must not block", status)
 		}
 	}
 }
 
 func TestFilterScheduleBlockingAppointments(t *testing.T) {
 	input := []Appointment{
-		{ID: 1, Status: "cancelled", StartTime: "14:00", EndTime: "15:00"},
-		{ID: 2, Status: "scheduled", StartTime: "16:00", EndTime: "17:00"},
-		{ID: 3, Status: "cancelado", StartTime: "10:00", EndTime: "11:00"},
-		{ID: 4, Status: "finished", StartTime: "11:00", EndTime: "12:00"},
+		{ID: 1, Status: "cancelled"},
+		{ID: 2, Status: "scheduled"},
+		{ID: 3, Status: "confirmed"},
+		{ID: 4, Status: "completed"},
 	}
-
 	filtered := FilterScheduleBlockingAppointments(input)
-	if len(filtered) != 1 {
-		t.Fatalf("expected 1 blocking appointment, got %d", len(filtered))
+	if len(filtered) != 2 {
+		t.Fatalf("expected 2 blocking, got %d", len(filtered))
 	}
-	if filtered[0].ID != 2 {
-		t.Fatalf("expected id 2, got %d", filtered[0].ID)
+}
+
+func TestCanTransitionStatus(t *testing.T) {
+	if !CanTransitionStatus("scheduled", "completed") {
+		t.Fatal("scheduled -> completed")
+	}
+	if !CanTransitionStatus("scheduled", "cancelled") {
+		t.Fatal("scheduled -> cancelled")
+	}
+	if CanTransitionStatus("completed", "scheduled") {
+		t.Fatal("completed -> scheduled not allowed")
+	}
+	if CanTransitionStatus("cancelled", "scheduled") {
+		t.Fatal("cancelled -> scheduled not allowed")
 	}
 }

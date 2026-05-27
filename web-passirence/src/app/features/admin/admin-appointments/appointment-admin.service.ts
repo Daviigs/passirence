@@ -74,20 +74,11 @@ export class AppointmentAdminService {
       apiFilters.professionalId = filters.professionalId;
     }
 
-    const status = this.mapStatusToApi(filters.status);
-    if (status) apiFilters.status = status;
+    if (filters.status && filters.status !== 'all') {
+      apiFilters.status = filters.status;
+    }
 
     return apiFilters;
-  }
-
-  private mapStatusToApi(status?: AppointmentStatusFilter): string | undefined {
-    if (!status || status === 'all') return undefined;
-    if (status === 'completed') return 'finished';
-    if (status === 'cancelled') return 'cancelled';
-    if (status === 'scheduled') return 'scheduled';
-    if (status === 'confirmed') return 'confirmed';
-    if (status === 'pending') return 'scheduled';
-    return status;
   }
 
   private toCalendarEvent(item: AdminAppointment): AppointmentCalendarEvent {

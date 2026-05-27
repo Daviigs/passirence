@@ -22,10 +22,8 @@ export class AppointmentFiltersPanel {
   readonly statusOptions: { value: AppointmentStatusFilter; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'scheduled', label: 'Agendado' },
-    { value: 'confirmed', label: 'Confirmado' },
-    { value: 'pending', label: 'Pendente' },
+    { value: 'completed', label: 'Concluído' },
     { value: 'cancelled', label: 'Cancelado' },
-    { value: 'completed', label: 'Finalizado' },
   ];
 
   readonly periodOptions: { value: AppointmentPeriodFilter; label: string }[] = [

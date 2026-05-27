@@ -6,7 +6,7 @@ import { AppointmentDetails } from '../appointment-details/appointment-details';
 export interface DayPanelSummary {
   total: number;
   active: number;
-  confirmed: number;
+  scheduled: number;
   completed: number;
 }
 
@@ -19,7 +19,7 @@ export interface DayPanelSummary {
 export class AppointmentDayPanel {
   events = input<AppointmentCalendarEvent[]>([]);
   selected = input<AppointmentCalendarEvent | null>(null);
-  summary = input<DayPanelSummary>({ total: 0, active: 0, confirmed: 0, completed: 0 });
+  summary = input<DayPanelSummary>({ total: 0, active: 0, scheduled: 0, completed: 0 });
   dateLabel = input('');
   businessHours = input('');
   isLoading = input(false);

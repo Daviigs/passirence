@@ -1,9 +1,4 @@
-export type AppointmentStatus =
-  | 'scheduled'
-  | 'confirmed'
-  | 'finished'
-  | 'cancelled'
-  | 'canceled';
+import type { AppointmentStatus } from './appointment-status';
 
 export interface AppointmentServiceItem {
   id: number;
@@ -17,12 +12,12 @@ export interface AdminAppointment {
   professionalId: number;
   serviceIds: number[];
   date: string;
+  status: AppointmentStatus;
   startTime: string;
   endTime: string;
-  status: string;
+  professionalName?: string;
   clientName: string;
   clientPhone: string;
-  professionalName?: string;
   services: string[];
-  serviceItems?: AppointmentServiceItem[];
+  serviceItems: AppointmentServiceItem[];
 }

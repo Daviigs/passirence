@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { normalizeAppointmentStatus } from '../../../../../core/models/appointment-status';
 import { ClienteAppointmentView } from '../../models/cliente.model';
 import { formatAppointmentDate } from '../../cliente.utils';
 
@@ -15,9 +16,9 @@ export class ClienteAppointments {
   formatTime = (time: string) => time?.slice(0, 5) ?? '--:--';
 
   statusClass(status: string): string {
-    if (status === 'completed' || status === 'finished') return 'bg-[#0066ff]/15 text-[#0066ff] border-[#0066ff]/35';
-    if (status === 'confirmed' || status === 'scheduled') return 'bg-green-500/15 text-green-400 border-green-500/30';
-    if (status === 'cancelled' || status === 'canceled') return 'bg-white/5 text-white/40 border-white/10';
-    return 'bg-yellow-600/15 text-yellow-600 border-yellow-600/30';
+    const normalized = normalizeAppointmentStatus(status);
+    if (normalized === 'completed') return 'bg-[#0066ff]/15 text-[#0066ff] border-[#0066ff]/35';
+    if (normalized === 'scheduled') return 'bg-green-500/15 text-green-400 border-green-500/30';
+    return 'bg-white/5 text-white/40 border-white/10';
   }
 }

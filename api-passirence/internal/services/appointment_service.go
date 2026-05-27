@@ -28,8 +28,8 @@ func (s *AppointmentService) List(ctx context.Context, filters dtos.AppointmentF
 		}
 	}
 
-	if filters.Status != "" && !models.IsValidAppointmentStatus(filters.Status) {
-		return nil, apperror.Validation("status inválido")
+	if filters.Status != "" {
+		filters.Status = models.NormalizeAppointmentStatus(filters.Status)
 	}
 
 	appointments, err := repositories.ListAppointments(ctx, filters)
@@ -192,13 +192,10 @@ func (s *AppointmentService) CreateAppointment(
 		return nil, err
 	}
 
-	status := req.Status
-	if status == "" {
-		status = models.AppointmentStatusScheduled
+	if req.Status != "" && models.NormalizeAppointmentStatus(req.Status) != models.AppointmentStatusScheduled {
+		return nil, apperror.Validation("status inválido para criação; use scheduled")
 	}
-	if !models.IsActiveAppointmentStatus(status) {
-		return nil, apperror.Validation("status inválido para criação")
-	}
+	status := models.AppointmentStatusScheduled
 
 	settings, loc, err := s.loadSettings(ctx)
 	if err != nil {
@@ -291,12 +288,9 @@ func (s *AppointmentService) UpdateAppointment(
 		return nil, apperror.Validation("não é possível editar agendamento cancelado ou finalizado")
 	}
 
-	if !models.IsValidAppointmentStatus(req.Status) {
-		return nil, apperror.Validation("status inválido")
-	}
-
-	if !canTransitionStatus(existing.Status, req.Status) {
-		return nil, apperror.Validation(fmt.Sprintf("transição de status inválida: %s → %s", existing.Status, req.Status))
+	nextStatus := models.NormalizeAppointmentStatus(req.Status)
+	if !models.CanTransitionStatus(existing.Status, nextStatus) {
+		return nil, apperror.Validation(fmt.Sprintf("transição de status inválida: %s → %s", models.NormalizeAppointmentStatus(existing.Status), nextStatus))
 	}
 
 	settings, loc, err := s.loadSettings(ctx)
@@ -318,7 +312,7 @@ func (s *AppointmentService) UpdateAppointment(
 		return nil, apperror.Validation("date inválida, use o formato YYYY-MM-DD")
 	}
 
-	requireSlotValidation := models.IsActiveAppointmentStatus(req.Status)
+	requireSlotValidation := models.IsActiveAppointmentStatus(nextStatus)
 	if requireSlotValidation {
 		if err := s.validateAppointmentSlot(ctx, slotValidationInput{
 			ProfessionalID:       req.ProfessionalID,
@@ -346,7 +340,7 @@ func (s *AppointmentService) UpdateAppointment(
 	existing.Date = req.Date
 	existing.StartTime = req.StartTime
 	existing.EndTime = endTime
-	existing.Status = req.Status
+	existing.Status = nextStatus
 
 	if err := repositories.UpdateAppointmentWithServices(ctx, existing, req.ServiceIDs); err != nil {
 		return nil, apperror.Internal("falha ao atualizar agendamento")
@@ -361,11 +355,12 @@ func (s *AppointmentService) CancelAppointment(ctx context.Context, id int) (*dt
 		return nil, err
 	}
 
-	if existing.Status == models.AppointmentStatusCancelled {
+	current := models.NormalizeAppointmentStatus(existing.Status)
+	if current == models.AppointmentStatusCancelled {
 		return nil, apperror.Validation("agendamento já está cancelado")
 	}
 
-	if existing.Status == models.AppointmentStatusFinished {
+	if current == models.AppointmentStatusCompleted {
 		return nil, apperror.Validation("não é possível cancelar agendamento finalizado")
 	}
 
@@ -385,11 +380,12 @@ func (s *AppointmentService) FinishAppointment(ctx context.Context, id int) (*dt
 		return nil, apperror.Internal("falha ao buscar agendamento")
 	}
 
-	if existing.Status == models.AppointmentStatusCancelled {
+	current := models.NormalizeAppointmentStatus(existing.Status)
+	if current == models.AppointmentStatusCancelled {
 		return nil, apperror.Validation("não é possível finalizar agendamento cancelado")
 	}
 
-	if existing.Status == models.AppointmentStatusFinished {
+	if current == models.AppointmentStatusCompleted {
 		return nil, apperror.Validation("agendamento já está finalizado")
 	}
 
@@ -397,7 +393,7 @@ func (s *AppointmentService) FinishAppointment(ctx context.Context, id int) (*dt
 		return nil, apperror.Validation("status atual não permite finalização")
 	}
 
-	if err := repositories.UpdateAppointmentStatus(ctx, id, models.AppointmentStatusFinished); err != nil {
+	if err := repositories.UpdateAppointmentStatus(ctx, id, models.AppointmentStatusCompleted); err != nil {
 		return nil, apperror.Internal("falha ao finalizar agendamento")
 	}
 
@@ -501,22 +497,6 @@ func (s *AppointmentService) validateAppointmentSlot(ctx context.Context, input 
 	}
 
 	return nil
-}
-
-func canTransitionStatus(current, next string) bool {
-	if current == next {
-		return true
-	}
-
-	switch current {
-	case models.AppointmentStatusScheduled, models.AppointmentStatusConfirmed:
-		return next == models.AppointmentStatusScheduled ||
-			next == models.AppointmentStatusConfirmed ||
-			next == models.AppointmentStatusCancelled ||
-			next == models.AppointmentStatusFinished
-	default:
-		return false
-	}
 }
 
 func buildAppointmentServiceLinks(appointmentID int, serviceIDs []int) []models.AppointmentService {
@@ -672,8 +652,8 @@ func validateCreateRequest(req *dtos.CreateAppointmentRequest) error {
 	if _, err := schedule.MinutesFromTime(req.StartTime); err != nil {
 		return apperror.Validation("startTime inválido, use o formato HH:MM")
 	}
-	if req.Status != "" && !models.IsValidAppointmentStatus(req.Status) {
-		return apperror.Validation("status inválido")
+	if req.Status != "" && models.NormalizeAppointmentStatus(req.Status) != models.AppointmentStatusScheduled {
+		return apperror.Validation("status inválido para criação; use scheduled")
 	}
 	return nil
 }
@@ -786,10 +766,7 @@ func ParseAppointmentFilters(cQuery map[string]string) (dtos.AppointmentFilters,
 	}
 
 	if status := cQuery["status"]; status != "" {
-		if !models.IsValidAppointmentStatus(status) {
-			return filters, apperror.Validation("status inválido")
-		}
-		filters.Status = status
+		filters.Status = models.NormalizeAppointmentStatus(status)
 	}
 
 	return filters, nil

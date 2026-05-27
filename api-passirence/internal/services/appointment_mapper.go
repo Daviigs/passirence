@@ -108,6 +108,6 @@ func mapAppointmentToRichResponse(
 		Date:             appointment.Date,
 		StartTime:        appointment.StartTime,
 		EndTime:          appointment.EndTime,
-		Status:           appointment.Status,
+		Status:           models.NormalizeAppointmentStatus(appointment.Status),
 	}
 }

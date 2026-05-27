@@ -5,70 +5,57 @@ import (
 	"time"
 )
 
+// Status oficiais de agendamento (única fonte de verdade).
 const (
 	AppointmentStatusScheduled  = "scheduled"
-	AppointmentStatusConfirmed  = "confirmed"
-	AppointmentStatusInProgress = "in_progress"
-	AppointmentStatusFinished   = "finished"
 	AppointmentStatusCompleted  = "completed"
 	AppointmentStatusCancelled  = "cancelled"
-	AppointmentStatusCanceled   = "canceled"
-	AppointmentStatusNoShow     = "no_show"
 )
 
-// ActiveAppointmentStatuses — agendamentos que ainda podem ser editados (não encerrados).
-var ActiveAppointmentStatuses = []string{
-	AppointmentStatusScheduled,
-	AppointmentStatusConfirmed,
-}
-
-// ScheduleNonBlockingStatuses — status que liberam o horário na agenda (referência/documentação).
-func ScheduleNonBlockingStatuses() []string {
+// OfficialAppointmentStatuses lista os status válidos na API.
+func OfficialAppointmentStatuses() []string {
 	return []string{
-		AppointmentStatusCancelled,
-		AppointmentStatusCanceled,
-		"cancelado",
-		AppointmentStatusFinished,
+		AppointmentStatusScheduled,
 		AppointmentStatusCompleted,
-		"finalizado",
-		"concluido",
-		"concluído",
-		AppointmentStatusNoShow,
-		"no-show",
-		"nao_compareceu",
-		"não_compareceu",
+		AppointmentStatusCancelled,
 	}
 }
 
-// AppointmentBlocksSchedule indica se o agendamento ocupa horário na disponibilidade e validação de conflito.
-func AppointmentBlocksSchedule(status string) bool {
-	switch normalizeAppointmentStatus(status) {
+// NormalizeAppointmentStatus converte status legados para um dos 3 oficiais.
+func NormalizeAppointmentStatus(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
 	case AppointmentStatusScheduled,
-		AppointmentStatusConfirmed,
-		AppointmentStatusInProgress,
+		"confirmed",
+		"in_progress",
 		"in-progress",
 		"pending",
 		"agendado",
 		"confirmado",
 		"em_andamento",
 		"em andamento":
-		return true
-	case AppointmentStatusCancelled,
-		AppointmentStatusCanceled,
-		"cancelado",
-		AppointmentStatusFinished,
-		AppointmentStatusCompleted,
+		return AppointmentStatusScheduled
+	case AppointmentStatusCompleted,
+		"finished",
 		"finalizado",
 		"concluido",
-		"concluído",
-		AppointmentStatusNoShow,
+		"concluído":
+		return AppointmentStatusCompleted
+	case AppointmentStatusCancelled,
+		"canceled",
+		"cancelado",
+		"no_show",
 		"no-show",
 		"nao_compareceu",
 		"não_compareceu":
-		return false
+		return AppointmentStatusCancelled
 	default:
-		return false
+		return AppointmentStatusScheduled
 	}
+}
+
+// AppointmentBlocksSchedule indica se o agendamento ocupa horário na agenda.
+func AppointmentBlocksSchedule(status string) bool {
+	return NormalizeAppointmentStatus(status) == AppointmentStatusScheduled
 }
 
 // FilterScheduleBlockingAppointments retorna apenas agendamentos que ocupam horário na agenda.
@@ -83,10 +70,6 @@ func FilterScheduleBlockingAppointments(appointments []Appointment) []Appointmen
 		}
 	}
 	return filtered
-}
-
-func normalizeAppointmentStatus(status string) string {
-	return strings.ToLower(strings.TrimSpace(status))
 }
 
 type Appointment struct {
@@ -108,23 +91,29 @@ func (Appointment) TableName() string {
 }
 
 func IsValidAppointmentStatus(status string) bool {
-	switch normalizeAppointmentStatus(status) {
-	case AppointmentStatusScheduled,
-		AppointmentStatusConfirmed,
-		AppointmentStatusInProgress,
-		"in-progress",
-		AppointmentStatusFinished,
-		AppointmentStatusCompleted,
-		AppointmentStatusCancelled,
-		AppointmentStatusCanceled,
-		AppointmentStatusNoShow,
-		"no-show":
-		return true
-	default:
-		return false
-	}
+	normalized := NormalizeAppointmentStatus(status)
+	return normalized == AppointmentStatusScheduled ||
+		normalized == AppointmentStatusCompleted ||
+		normalized == AppointmentStatusCancelled
 }
 
+// IsActiveAppointmentStatus — agendamento ainda editável (apenas scheduled).
 func IsActiveAppointmentStatus(status string) bool {
-	return status == AppointmentStatusScheduled || status == AppointmentStatusConfirmed
+	return NormalizeAppointmentStatus(status) == AppointmentStatusScheduled
+}
+
+// CanTransitionStatus valida mudanças de status entre os 3 oficiais.
+func CanTransitionStatus(current, next string) bool {
+	current = NormalizeAppointmentStatus(current)
+	next = NormalizeAppointmentStatus(next)
+
+	if current == next {
+		return true
+	}
+
+	if current == AppointmentStatusScheduled {
+		return next == AppointmentStatusCompleted || next == AppointmentStatusCancelled
+	}
+
+	return false
 }

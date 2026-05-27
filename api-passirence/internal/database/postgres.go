@@ -56,6 +56,10 @@ func runMigrations(db *gorm.DB) error {
 		return err
 	}
 
+	if err := migrateAppointmentStatuses(db); err != nil {
+		return err
+	}
+
 	return seedDefaultSettings(db)
 }
 

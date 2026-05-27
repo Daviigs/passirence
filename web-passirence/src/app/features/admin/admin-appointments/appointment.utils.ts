@@ -1,3 +1,9 @@
+import {
+  formatAppointmentStatusLabel,
+  isAppointmentEditable as coreIsAppointmentEditable,
+  isTerminalAppointmentStatus,
+  normalizeAppointmentStatus,
+} from '../../../core/models/appointment-status';
 import { AppointmentCalendarEvent } from './models/appointment-view.model';
 import { ScheduleBlock } from '../schedule-blocks/models/schedule-block.model';
 import { DateUtils } from '../../../core/utils';
@@ -14,36 +20,27 @@ export function minutesToTime(minutes: number): string {
 }
 
 export function formatAppointmentStatus(status: string): string {
-  const map: Record<string, string> = {
-    scheduled: 'Agendado',
-    confirmed: 'Confirmado',
-    pending: 'Pendente',
-    cancelled: 'Cancelado',
-    canceled: 'Cancelado',
-    completed: 'Finalizado',
-    finished: 'Finalizado',
-  };
-  return map[status] ?? status;
+  return formatAppointmentStatusLabel(status);
 }
 
 export function statusBadgeClass(status: string): string {
-  if (status === 'completed' || status === 'finished') {
-    return 'bg-[#0066ff]/15 text-[#0066ff] border-[#0066ff]/35';
+  const normalized = normalizeAppointmentStatus(status);
+  if (normalized === 'completed') {
+    return 'bg-[#0066ff]/15 text-[#6eb5ff] border-[#0066ff]/35';
   }
-  if (status === 'confirmed' || status === 'scheduled') {
+  if (normalized === 'scheduled') {
     return 'bg-green-500/15 text-green-400 border-green-500/30';
   }
-  if (status === 'pending') return 'bg-yellow-600/15 text-yellow-600 border-yellow-600/30';
-  if (status === 'cancelled' || status === 'canceled') {
+  if (normalized === 'cancelled') {
     return 'bg-red-500/15 text-red-400 border-red-400/30';
   }
   return 'bg-white/10 text-white/60 border-white/10';
 }
 
 export function cardAccentClass(status: string): string {
-  if (status === 'completed' || status === 'finished') return 'border-l-[#0066ff]';
-  if (status === 'pending') return 'border-l-yellow-600';
-  if (status === 'cancelled' || status === 'canceled') return 'border-l-red-400';
+  const normalized = normalizeAppointmentStatus(status);
+  if (normalized === 'completed') return 'border-l-[#0066ff]';
+  if (normalized === 'cancelled') return 'border-l-red-400';
   return 'border-l-green-500';
 }
 
@@ -86,41 +83,31 @@ export function matchesSearch(event: AppointmentCalendarEvent, query: string): b
 
 export function matchesStatusFilter(status: string, filter: string): boolean {
   if (filter === 'all') return true;
-  if (filter === 'cancelled') return status === 'cancelled' || status === 'canceled';
-  if (filter === 'scheduled') return status === 'scheduled' || status === 'confirmed';
-  if (filter === 'completed') return status === 'finished' || status === 'completed';
-  return status === filter;
+  return normalizeAppointmentStatus(status) === filter;
 }
 
 export function isAppointmentEditable(status: string): boolean {
-  return status !== 'cancelled' && status !== 'canceled' && status !== 'finished' && status !== 'completed';
+  return coreIsAppointmentEditable(status);
 }
 
 export function isTerminalStatus(status: string): boolean {
-  return status === 'cancelled' || status === 'canceled' || status === 'finished' || status === 'completed';
+  return isTerminalAppointmentStatus(status);
 }
 
 export function buildDaySummary(events: AppointmentCalendarEvent[]): {
   total: number;
   active: number;
-  confirmed: number;
+  scheduled: number;
   completed: number;
 } {
-  const completed = events.filter(
-    (e) => e.status === 'finished' || e.status === 'completed',
-  ).length;
-  const cancelled = events.filter(
-    (e) => e.status === 'cancelled' || e.status === 'canceled',
-  ).length;
-  const active = events.length - completed - cancelled;
-  const confirmed = events.filter(
-    (e) => e.status === 'confirmed' || e.status === 'scheduled',
-  ).length;
+  const completed = events.filter((e) => normalizeAppointmentStatus(e.status) === 'completed').length;
+  const cancelled = events.filter((e) => normalizeAppointmentStatus(e.status) === 'cancelled').length;
+  const scheduled = events.filter((e) => normalizeAppointmentStatus(e.status) === 'scheduled').length;
 
   return {
     total: events.length,
-    active,
-    confirmed,
+    active: scheduled,
+    scheduled,
     completed,
   };
 }

@@ -3,6 +3,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AppointmentsApiService, ServicesApiService } from '../../core/services';
 import { ClientAppointment } from '../../core/models';
+import {
+  formatAppointmentStatusLabel,
+  normalizeAppointmentStatus,
+} from '../../core/models/appointment-status';
 import { DateUtils, TimeUtils } from '../../core/utils';
 
 interface AppointmentView {
@@ -84,9 +88,8 @@ export class AppointmentsComponent implements OnInit {
   ): AppointmentView {
     const now = new Date();
     const aptDateTime = DateUtils.toDateTime(apt.date, apt.startTime);
-    const isCancelled = apt.status === 'cancelled' || apt.status === 'canceled';
-    const isFinished = apt.status === 'finished' || apt.status === 'completed';
-    const isUpcoming = !isCancelled && !isFinished && aptDateTime >= now;
+    const normalized = normalizeAppointmentStatus(apt.status);
+    const isUpcoming = normalized === 'scheduled' && aptDateTime >= now;
 
     const serviceLabel =
       apt.serviceIds.map((id) => serviceMap.get(id) ?? `Serviço #${id}`).join(', ') ||
@@ -99,7 +102,7 @@ export class AppointmentsComponent implements OnInit {
       startTime: apt.startTime,
       endTime: apt.endTime,
       professionalId: apt.professionalId,
-      status: apt.status,
+      status: normalized,
       isUpcoming,
     };
   }
@@ -117,14 +120,6 @@ export class AppointmentsComponent implements OnInit {
   }
 
   formatStatus(status: string): string {
-    const map: Record<string, string> = {
-      scheduled: 'Agendado',
-      cancelled: 'Cancelado',
-      canceled: 'Cancelado',
-      completed: 'Concluído',
-      finished: 'Finalizado',
-      confirmed: 'Confirmado',
-    };
-    return map[status] ?? status;
+    return formatAppointmentStatusLabel(status);
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { API_BASE_URL } from '../config/api.config';
+import { normalizeAppointmentStatus } from '../models/appointment-status';
 import { asStringArray, unwrapData } from '../http/unwrap-api';
 import {
   AdminAppointment,
@@ -178,7 +179,7 @@ export class AppointmentsApiService {
           date: item.date,
           startTime: item.startTime,
           endTime: item.endTime,
-          status: item.status,
+          status: normalizeAppointmentStatus(item.status),
         })),
       ),
     );
@@ -193,7 +194,7 @@ export class AppointmentsApiService {
       professionalId: item.professionalId ?? 0,
       serviceIds: item.serviceIds ?? serviceItems.map((s) => s.id),
       date: item.date ?? '',
-      status: item.status ?? 'scheduled',
+      status: normalizeAppointmentStatus(item.status),
       startTime: item.startTime,
       endTime: item.endTime ?? item.startTime,
       professionalName: item.professionalName ?? item.professional?.nome,

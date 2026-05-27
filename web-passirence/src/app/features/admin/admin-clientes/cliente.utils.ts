@@ -26,17 +26,7 @@ export function matchesClienteSearch(cliente: Cliente, query: string): boolean {
   return cliente.nome.toLowerCase().includes(q);
 }
 
-export function formatAppointmentStatus(status: string): string {
-  const map: Record<string, string> = {
-    scheduled: 'Agendado',
-    cancelled: 'Cancelado',
-    canceled: 'Cancelado',
-    completed: 'Concluído',
-    finished: 'Finalizado',
-    confirmed: 'Confirmado',
-  };
-  return map[status] ?? status;
-}
+export { formatAppointmentStatusLabel as formatAppointmentStatus } from '../../../core/models/appointment-status';
 
 export function formatAppointmentDate(date: string): string {
   const [y, m, d] = date.split('-');
