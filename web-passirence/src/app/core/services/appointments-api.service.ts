@@ -175,6 +175,7 @@ export class AppointmentsApiService {
           id: item.id,
           clientId: item.clientId,
           professionalId: item.professionalId,
+          professionalName: item.professionalName,
           serviceIds: item.serviceIds,
           date: item.date,
           startTime: item.startTime,

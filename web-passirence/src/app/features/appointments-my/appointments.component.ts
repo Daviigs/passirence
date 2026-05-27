@@ -15,9 +15,10 @@ interface AppointmentView {
   date: string;
   startTime: string;
   endTime: string;
-  professionalId: number;
+  professionalName: string;
   status: string;
   isUpcoming: boolean;
+  canCancel: boolean;
 }
 
 @Component({
@@ -38,6 +39,9 @@ export class AppointmentsComponent implements OnInit {
   completedAppointments = signal<AppointmentView[]>([]);
   isLoading = signal(true);
   loadError = signal('');
+  cancelingId = signal<number | null>(null);
+  cancelError = signal('');
+  cancelSuccess = signal('');
 
   ngOnInit(): void {
     const state = history.state as { clientId?: number; clientName?: string };
@@ -95,16 +99,45 @@ export class AppointmentsComponent implements OnInit {
       apt.serviceIds.map((id) => serviceMap.get(id) ?? `Serviço #${id}`).join(', ') ||
       'Serviços não informados';
 
+    const professionalName =
+      apt.professionalName?.trim() || `Profissional #${apt.professionalId}`;
+
     return {
       id: apt.id,
       serviceLabel,
       date: apt.date,
       startTime: apt.startTime,
       endTime: apt.endTime,
-      professionalId: apt.professionalId,
+      professionalName,
       status: normalized,
       isUpcoming,
+      canCancel: isUpcoming,
     };
+  }
+
+  cancelAppointment(appointment: AppointmentView): void {
+    if (!appointment.canCancel || this.cancelingId() !== null) return;
+
+    const confirmed = confirm(
+      `Deseja cancelar o agendamento de ${this.formatDate(appointment.date)} às ${this.formatTime(appointment.startTime)}?`,
+    );
+    if (!confirmed) return;
+
+    this.cancelError.set('');
+    this.cancelSuccess.set('');
+    this.cancelingId.set(appointment.id);
+
+    this.appointmentsApi.cancelAppointment(appointment.id).subscribe({
+      next: () => {
+        this.cancelingId.set(null);
+        this.cancelSuccess.set('Agendamento cancelado com sucesso.');
+        this.loadAppointments();
+      },
+      error: (err: Error) => {
+        this.cancelingId.set(null);
+        this.cancelError.set(err.message || 'Não foi possível cancelar o agendamento.');
+      },
+    });
   }
 
   private sortKey(view: AppointmentView): number {

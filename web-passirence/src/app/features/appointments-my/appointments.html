@@ -43,6 +43,17 @@
         <a routerLink="/" class="inline-block mt-4 text-sm text-white/80 hover:text-white underline">Voltar ao início</a>
       </div>
     } @else {
+      @if (cancelSuccess()) {
+        <div class="mb-6 px-4 py-3 rounded-xl border border-green-300/40 bg-green-500/15 text-green-100 text-sm" role="status">
+          {{ cancelSuccess() }}
+        </div>
+      }
+      @if (cancelError()) {
+        <div class="mb-6 px-4 py-3 rounded-xl border border-red-300/40 bg-red-500/15 text-red-100 text-sm" role="alert">
+          {{ cancelError() }}
+        </div>
+      }
+
       <!-- Próximos -->
       <section class="mb-10 animate-fade-up">
         <h2 class="text-white font-bold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -77,8 +88,22 @@
                   </div>
                   <div class="flex items-center gap-2 text-sm text-gray-500">
                     <span>👨‍💼</span>
-                    <span>Profissional #{{ appointment.professionalId }}</span>
+                    <span>{{ appointment.professionalName }}</span>
                   </div>
+                  @if (appointment.canCancel) {
+                    <button
+                      type="button"
+                      class="mt-2 w-full py-2.5 rounded-lg text-sm font-bold uppercase tracking-wide border-2 border-red-400/60 text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      [disabled]="cancelingId() === appointment.id"
+                      (click)="cancelAppointment(appointment)"
+                    >
+                      @if (cancelingId() === appointment.id) {
+                        Cancelando...
+                      } @else {
+                        Cancelar agendamento
+                      }
+                    </button>
+                  }
                 </div>
               </article>
             }
@@ -117,6 +142,10 @@
                   <div class="flex items-center gap-2 text-sm text-gray-600">
                     <span>🕒</span>
                     <span>{{ formatTime(appointment.startTime) }} — {{ formatTime(appointment.endTime) }}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <span>👨‍💼</span>
+                    <span>{{ appointment.professionalName }}</span>
                   </div>
                 </div>
               </article>
