@@ -4,6 +4,12 @@
     <p class="text-gray-500 text-sm mt-1">Gerencie a conexao do WhatsApp para envio de mensagens</p>
   </div>
 
+  @if (errorMessage()) {
+    <div class="mb-4 max-w-lg rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ errorMessage() }}
+    </div>
+  }
+
   @if (isLoading()) {
     <div class="flex items-center justify-center h-48">
       <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0066ff] rounded-full animate-spin"></div>
@@ -31,14 +37,21 @@
                 </svg>
               </div>
               <p class="text-lg font-semibold text-green-700 mb-1">Conectado</p>
-              <p class="text-gray-500 text-sm mb-6">WhatsApp esta ativo e pronto para enviar mensagens</p>
+              @if (whatsappStatus()!.profileName) {
+                <p class="text-gray-700 text-sm font-medium">{{ whatsappStatus()!.profileName }}</p>
+              }
+              @if (whatsappStatus()!.phoneNumber) {
+                <p class="text-gray-500 text-sm mb-4">+{{ whatsappStatus()!.phoneNumber }}</p>
+              } @else {
+                <p class="text-gray-500 text-sm mb-4">WhatsApp esta ativo e pronto para enviar mensagens</p>
+              }
               <div class="flex gap-3 justify-center">
-                <button (click)="disconnect()"
-                  class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors cursor-pointer">
-                  Desconectar
+                <button (click)="disconnect()" [disabled]="isConnecting()"
+                  class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50">
+                  @if (isConnecting()) { Desconectando... } @else { Desconectar }
                 </button>
-                <button (click)="clearSession()"
-                  class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                <button (click)="clearSession()" [disabled]="isConnecting()"
+                  class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50">
                   Limpar Sessao
                 </button>
               </div>

@@ -1,17 +1,20 @@
 import type { Request, Response, NextFunction } from 'express';
 import { whatsappManager } from '../services/index.js';
+import { toStatusResponse } from '../utils/status-response.util.js';
 
 export class WhatsAppController {
-  getStatus(_req: Request, res: Response): void {
-    res.json({
-      success: true,
-      data: whatsappManager.getStatus(),
-    });
+  async getStatus(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await toStatusResponse(whatsappManager.getStatus());
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
   }
 
   async connect(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const data = await whatsappManager.connect();
+      const data = await toStatusResponse(await whatsappManager.connect());
       res.json({ success: true, data });
     } catch (error) {
       next(error);

@@ -18,3 +18,8 @@ export {
 } from './appointment-status';
 export type { ClientAppointment } from './client-appointment.model';
 export type { ApiResponse } from './api-response.model';
+export type {
+  WhatsappApiStatus,
+  WhatsappConnectionStatus,
+  WhatsappUiStatus,
+} from './whatsapp-status.model';
