@@ -120,6 +120,23 @@ export class AdminAppointments implements OnInit {
     }),
   );
 
+  /** Clientes ativos para novo agendamento; inclui o cliente do agendamento em edição se estiver inativo. */
+  formClients = computed(() => {
+    const list = this.clients();
+    const editing = this.editingAppointment();
+    if (!editing) return list;
+    if (list.some((c) => c.id === editing.clientId)) return list;
+    return [
+      ...list,
+      {
+        id: editing.clientId,
+        nome: editing.clientName || `Cliente #${editing.clientId}`,
+        telefone: '',
+        ativo: false,
+      },
+    ];
+  });
+
   ngOnInit(): void {
     this.applyPeriodToDate();
     this.loadReferenceData();
@@ -355,7 +372,7 @@ export class AdminAppointments implements OnInit {
       next: (p) => this.professionals.set(p),
       error: () => this.professionals.set([]),
     });
-    this.clienteService.listAll().subscribe({
+    this.clienteService.listActive().subscribe({
       next: (c) => this.clients.set(c),
       error: () => this.clients.set([]),
     });

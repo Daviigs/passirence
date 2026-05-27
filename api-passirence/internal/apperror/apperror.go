@@ -32,6 +32,10 @@ func Conflict(message string) *AppError {
 	return New("CONFLICT", message, 409)
 }
 
+func Forbidden(message string) *AppError {
+	return New("FORBIDDEN", message, 403)
+}
+
 func Internal(message string) *AppError {
 	return New("INTERNAL_ERROR", message, 500)
 }

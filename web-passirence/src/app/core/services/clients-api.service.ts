@@ -43,6 +43,7 @@ export class ClientsApiService {
       .post<ClienteApi | { data: ClienteApi }>(`${this.baseUrl}/clientes`, {
         nome: name.trim(),
         telefone,
+        ativo: true,
       })
       .pipe(
         unwrapData<ClienteApi>(),
@@ -70,6 +71,7 @@ export class ClientsApiService {
       id: item.id,
       name: item.nome,
       phone: clientDigits,
+      active: item.ativo ?? true,
     };
   }
 }

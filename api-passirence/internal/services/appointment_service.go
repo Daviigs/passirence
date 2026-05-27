@@ -198,7 +198,7 @@ func (s *AppointmentService) CreateAppointment(
 		return nil, err
 	}
 
-	if err := s.ensureClientExists(ctx, req.ClientID); err != nil {
+	if err := s.ensureClientCanBook(ctx, req.ClientID); err != nil {
 		return nil, err
 	}
 
@@ -581,13 +581,20 @@ func (s *AppointmentService) calculateTotalDuration(ctx context.Context, service
 	return total, nil
 }
 
-func (s *AppointmentService) ensureClientExists(ctx context.Context, id int) error {
-	_, err := repositories.GetClienteByID(ctx, id)
+func (s *AppointmentService) ensureClientCanBook(ctx context.Context, id int) error {
+	cliente, err := repositories.GetClienteByID(ctx, id)
 	if err != nil {
 		if repositories.IsRecordNotFound(err) {
 			return apperror.NotFound("cliente não encontrado")
 		}
 		return apperror.Internal("falha ao buscar cliente")
+	}
+	if !cliente.Ativo {
+		return apperror.New(
+			"CLIENT_INACTIVE",
+			"cliente inativo não pode realizar novos agendamentos",
+			403,
+		)
 	}
 	return nil
 }

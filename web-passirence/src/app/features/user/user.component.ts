@@ -99,6 +99,13 @@ export class UserComponent implements OnInit {
         if (!this.isCompletePhone(phoneDigits)) return;
 
         if (client) {
+          if (!client.active) {
+            this.clearClientState();
+            this.inlineError.set(
+              'Seu cadastro está inativo. Entre em contato com a barbearia para novos agendamentos.',
+            );
+            return;
+          }
           this.existingClient.set(client);
           this.userName.set('');
           this.phoneLookupStatus.set('found');
@@ -122,7 +129,10 @@ export class UserComponent implements OnInit {
   canSubmit(): boolean {
     const status = this.phoneLookupStatus();
     if (!this.isPhoneValid() || status === 'loading' || status === 'idle') return false;
-    if (status === 'found') return !!this.existingClient();
+    if (status === 'found') {
+      const client = this.existingClient();
+      return !!client && client.active;
+    }
     return this.isNameValid();
   }
 
@@ -233,6 +243,12 @@ export class UserComponent implements OnInit {
       if (typeof body?.message === 'string') return body.message;
       if (typeof body === 'string' && body.trim()) return body;
       if (error.status === 409) return 'Horário indisponível. Escolha outro horário.';
+      if (error.status === 403) {
+        return (
+          body?.error?.message ??
+          'Cadastro inativo. Entre em contato com a barbearia para novos agendamentos.'
+        );
+      }
       if (error.status === 400) return 'Dados inválidos. Verifique as informações.';
     }
     if (error instanceof Error && error.message) return error.message;
