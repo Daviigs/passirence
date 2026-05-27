@@ -147,7 +147,9 @@ export class AppointmentForm {
     excludeAppointmentId?: number,
   ): void {
     this.loadingTimes.set(true);
-    this.appointmentsApi.getAvailableTimes(date, professionalId, serviceIds).subscribe({
+    this.appointmentsApi
+      .getAvailableTimes(date, professionalId, serviceIds, excludeAppointmentId)
+      .subscribe({
       next: (times) => {
         let slots = times;
         const current = this.startTime()?.slice(0, 5);

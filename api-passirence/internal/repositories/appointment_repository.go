@@ -34,6 +34,8 @@ func ListAppointments(ctx context.Context, filters dtos.AppointmentFilters) ([]m
 	return appointments, err
 }
 
+// GetBlockingAppointmentsByProfessionalAndDate retorna agendamentos que ocupam horário na agenda.
+// Carrega todos do dia/profissional e filtra por status em Go (fonte única de verdade).
 func GetBlockingAppointmentsByProfessionalAndDate(
 	ctx context.Context,
 	professionalID int,
@@ -43,19 +45,19 @@ func GetBlockingAppointmentsByProfessionalAndDate(
 	var appointments []models.Appointment
 
 	query := database.DB.WithContext(ctx).
-		Where(
-			"professional_id = ? AND date = ? AND status IN ?",
-			professionalID,
-			date,
-			models.ActiveAppointmentStatuses,
-		)
+		Model(&models.Appointment{}).
+		Select("id", "professional_id", "date", "start_time", "end_time", "status").
+		Where("professional_id = ? AND date = ?", professionalID, date)
 
 	if excludeAppointmentID > 0 {
 		query = query.Where("id <> ?", excludeAppointmentID)
 	}
 
-	err := query.Find(&appointments).Error
-	return appointments, err
+	if err := query.Find(&appointments).Error; err != nil {
+		return nil, err
+	}
+
+	return models.FilterScheduleBlockingAppointments(appointments), nil
 }
 
 func CreateAppointmentWithServices(
@@ -129,5 +131,7 @@ func UpdateAppointmentStatus(ctx context.Context, id int, status string) error {
 	return database.DB.WithContext(ctx).
 		Model(&models.Appointment{}).
 		Where("id = ?", id).
-		Update("status", status).Error
+		Updates(map[string]interface{}{
+			"status": status,
+		}).Error
 }

@@ -61,6 +61,7 @@ export class AppointmentsApiService {
     date: string,
     professionalId: number,
     serviceIds: number[],
+    excludeAppointmentId?: number,
   ): Observable<string[]> {
     let params = new HttpParams()
       .set('date', date)
@@ -68,6 +69,9 @@ export class AppointmentsApiService {
 
     if (serviceIds.length > 0) {
       params = params.set('serviceIds', serviceIds.join(','));
+    }
+    if (excludeAppointmentId != null && excludeAppointmentId > 0) {
+      params = params.set('excludeAppointmentId', String(excludeAppointmentId));
     }
 
     return this.http

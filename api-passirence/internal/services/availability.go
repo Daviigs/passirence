@@ -2,6 +2,7 @@ package services
 
 import (
 	"api-passirence/internal/apperror"
+	"api-passirence/internal/models"
 	"api-passirence/internal/repositories"
 	"api-passirence/internal/schedule"
 	"context"
@@ -24,13 +25,9 @@ func fetchBusyRanges(
 		return nil, apperror.Internal("falha ao buscar agendamentos do profissional")
 	}
 
-	busy := make([]schedule.TimeRange, 0, len(appointments))
-	for _, appointment := range appointments {
-		timeRange, err := schedule.ToTimeRanges(appointment.StartTime, appointment.EndTime)
-		if err != nil {
-			return nil, apperror.Internal("agendamento existente com horário inválido")
-		}
-		busy = append(busy, timeRange)
+	busy, err := appointmentBusyRanges(appointments)
+	if err != nil {
+		return nil, err
 	}
 
 	blocks, err := repositories.GetBlocksForAvailability(ctx, professionalID, date, weekday)
@@ -52,4 +49,19 @@ func isDateGloballyBlocked(ctx context.Context, date string, weekday int) (bool,
 		return false, apperror.Internal("falha ao buscar bloqueios globais")
 	}
 	return schedule.IsDateFullyBlocked(blocks), nil
+}
+
+func appointmentBusyRanges(appointments []models.Appointment) ([]schedule.TimeRange, error) {
+	busy := make([]schedule.TimeRange, 0, len(appointments))
+	for _, appointment := range appointments {
+		if !models.AppointmentBlocksSchedule(appointment.Status) {
+			continue
+		}
+		timeRange, err := schedule.ToTimeRanges(appointment.StartTime, appointment.EndTime)
+		if err != nil {
+			return nil, apperror.Internal("agendamento existente com horário inválido")
+		}
+		busy = append(busy, timeRange)
+	}
+	return busy, nil
 }

@@ -1,17 +1,92 @@
 package models
 
-import "time"
-
-const (
-	AppointmentStatusScheduled = "scheduled"
-	AppointmentStatusConfirmed = "confirmed"
-	AppointmentStatusFinished  = "finished"
-	AppointmentStatusCancelled = "cancelled"
+import (
+	"strings"
+	"time"
 )
 
+const (
+	AppointmentStatusScheduled  = "scheduled"
+	AppointmentStatusConfirmed  = "confirmed"
+	AppointmentStatusInProgress = "in_progress"
+	AppointmentStatusFinished   = "finished"
+	AppointmentStatusCompleted  = "completed"
+	AppointmentStatusCancelled  = "cancelled"
+	AppointmentStatusCanceled   = "canceled"
+	AppointmentStatusNoShow     = "no_show"
+)
+
+// ActiveAppointmentStatuses — agendamentos que ainda podem ser editados (não encerrados).
 var ActiveAppointmentStatuses = []string{
 	AppointmentStatusScheduled,
 	AppointmentStatusConfirmed,
+}
+
+// ScheduleNonBlockingStatuses — status que liberam o horário na agenda (referência/documentação).
+func ScheduleNonBlockingStatuses() []string {
+	return []string{
+		AppointmentStatusCancelled,
+		AppointmentStatusCanceled,
+		"cancelado",
+		AppointmentStatusFinished,
+		AppointmentStatusCompleted,
+		"finalizado",
+		"concluido",
+		"concluído",
+		AppointmentStatusNoShow,
+		"no-show",
+		"nao_compareceu",
+		"não_compareceu",
+	}
+}
+
+// AppointmentBlocksSchedule indica se o agendamento ocupa horário na disponibilidade e validação de conflito.
+func AppointmentBlocksSchedule(status string) bool {
+	switch normalizeAppointmentStatus(status) {
+	case AppointmentStatusScheduled,
+		AppointmentStatusConfirmed,
+		AppointmentStatusInProgress,
+		"in-progress",
+		"pending",
+		"agendado",
+		"confirmado",
+		"em_andamento",
+		"em andamento":
+		return true
+	case AppointmentStatusCancelled,
+		AppointmentStatusCanceled,
+		"cancelado",
+		AppointmentStatusFinished,
+		AppointmentStatusCompleted,
+		"finalizado",
+		"concluido",
+		"concluído",
+		AppointmentStatusNoShow,
+		"no-show",
+		"nao_compareceu",
+		"não_compareceu":
+		return false
+	default:
+		return false
+	}
+}
+
+// FilterScheduleBlockingAppointments retorna apenas agendamentos que ocupam horário na agenda.
+func FilterScheduleBlockingAppointments(appointments []Appointment) []Appointment {
+	if len(appointments) == 0 {
+		return appointments
+	}
+	filtered := make([]Appointment, 0, len(appointments))
+	for _, appointment := range appointments {
+		if AppointmentBlocksSchedule(appointment.Status) {
+			filtered = append(filtered, appointment)
+		}
+	}
+	return filtered
+}
+
+func normalizeAppointmentStatus(status string) string {
+	return strings.ToLower(strings.TrimSpace(status))
 }
 
 type Appointment struct {
@@ -33,11 +108,17 @@ func (Appointment) TableName() string {
 }
 
 func IsValidAppointmentStatus(status string) bool {
-	switch status {
+	switch normalizeAppointmentStatus(status) {
 	case AppointmentStatusScheduled,
 		AppointmentStatusConfirmed,
+		AppointmentStatusInProgress,
+		"in-progress",
 		AppointmentStatusFinished,
-		AppointmentStatusCancelled:
+		AppointmentStatusCompleted,
+		AppointmentStatusCancelled,
+		AppointmentStatusCanceled,
+		AppointmentStatusNoShow,
+		"no-show":
 		return true
 	default:
 		return false

@@ -82,11 +82,21 @@ func (h *AppointmentHandler) GetAvailableTimes(c *gin.Context) {
 		return
 	}
 
+	excludeAppointmentID := 0
+	if raw := c.Query("excludeAppointmentId"); raw != "" {
+		excludeAppointmentID, err = strconv.Atoi(raw)
+		if err != nil || excludeAppointmentID < 0 {
+			response.Error(c, apperror.Validation("excludeAppointmentId inválido"))
+			return
+		}
+	}
+
 	times, err := h.service.GetAvailableTimes(
 		c.Request.Context(),
 		date,
 		professionalID,
 		serviceIDs,
+		excludeAppointmentID,
 	)
 	if err != nil {
 		response.Error(c, err)

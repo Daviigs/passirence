@@ -96,6 +96,7 @@ func (s *AppointmentService) GetAvailableTimes(
 	date string,
 	professionalID int,
 	serviceIDs []int,
+	excludeAppointmentID int,
 ) ([]string, error) {
 	if err := validateDate(date); err != nil {
 		return nil, err
@@ -161,7 +162,7 @@ func (s *AppointmentService) GetAvailableTimes(
 		return nil, apperror.Internal("horário de fechamento inválido nas configurações")
 	}
 
-	busy, err := fetchBusyRanges(ctx, professionalID, date, weekday, 0)
+	busy, err := fetchBusyRanges(ctx, professionalID, date, weekday, excludeAppointmentID)
 	if err != nil {
 		return nil, err
 	}
