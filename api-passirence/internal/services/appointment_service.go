@@ -2,7 +2,9 @@ package services
 
 import (
 	"api-passirence/internal/apperror"
+	"api-passirence/internal/config"
 	"api-passirence/internal/dtos"
+	integrationwhatsapp "api-passirence/internal/integrations/whatsapp"
 	"api-passirence/internal/models"
 	"api-passirence/internal/repositories"
 	"api-passirence/internal/schedule"
@@ -15,10 +17,17 @@ import (
 
 const availabilityDaysAhead = 60
 
-type AppointmentService struct{}
+type AppointmentService struct {
+	notifications *AppointmentNotificationService
+}
 
 func NewAppointmentService() *AppointmentService {
-	return &AppointmentService{}
+	whatsappCfg := config.LoadWhatsAppConfig()
+	whatsappClient := integrationwhatsapp.NewClient(whatsappCfg)
+
+	return &AppointmentService{
+		notifications: NewAppointmentNotificationService(whatsappClient),
+	}
 }
 
 func (s *AppointmentService) List(ctx context.Context, filters dtos.AppointmentFilters) ([]dtos.AppointmentResponse, error) {
@@ -260,7 +269,15 @@ func (s *AppointmentService) CreateAppointment(
 	}
 
 	appointment.Services = buildAppointmentServiceLinks(appointment.ID, req.ServiceIDs)
-	return s.GetByID(ctx, appointment.ID)
+
+	result, err := s.GetByID(ctx, appointment.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	s.notifications.NotifyAppointmentConfirmation(ctx, result, req.ServiceIDs)
+
+	return result, nil
 }
 
 func (s *AppointmentService) UpdateAppointment(

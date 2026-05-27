@@ -22,4 +22,7 @@ export const appointmentMessageSchema = z.object({
   service: nonEmptyString('Serviço'),
   date: nonEmptyString('Data'),
   time: nonEmptyString('Horário'),
+  totalPrice: z.coerce
+    .number({ required_error: 'Valor total é obrigatório' })
+    .min(0, 'Valor total inválido'),
 });

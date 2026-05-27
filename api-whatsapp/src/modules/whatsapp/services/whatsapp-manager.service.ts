@@ -9,7 +9,7 @@ import { logger } from '../../../shared/logger/index.js';
 import { handleConnectionUpdate, handleIncomingMessages } from '../handlers/index.js';
 import { clearAuthState, loadAuthState } from '../sessions/auth-state.session.js';
 import type { ConnectionStatus, WhatsAppStatus } from '../types/index.js';
-import { normalizePhoneToJid } from '../utils/index.js';
+import { resolvePhoneToJid } from '../utils/index.js';
 
 /**
  * Singleton: única instância do socket WhatsApp na aplicação.
@@ -99,7 +99,7 @@ class WhatsAppManagerService {
 
     let jid: string;
     try {
-      jid = normalizePhoneToJid(phone);
+      jid = await resolvePhoneToJid(this.socket, phone);
     } catch (error) {
       const messageText = error instanceof Error ? error.message : 'Telefone inválido';
       throw new AppError(messageText, 400, 'INVALID_PHONE');

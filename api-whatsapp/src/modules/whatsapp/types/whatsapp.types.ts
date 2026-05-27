@@ -30,4 +30,5 @@ export interface AppointmentMessagePayload {
   service: string;
   date: string;
   time: string;
+  totalPrice: number;
 }
