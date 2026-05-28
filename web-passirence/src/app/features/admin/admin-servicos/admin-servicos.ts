@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AdminSidebarService } from '../admin-sidebar.service';
 import { Servico, ServicosService } from './servicos.service';
+
+type ToastType = 'success' | 'error';
 
 @Component({
   selector: 'app-admin-servicos',
@@ -10,29 +13,58 @@ import { Servico, ServicosService } from './servicos.service';
 })
 export class AdminServicos implements OnInit {
   private readonly servicosService = inject(ServicosService);
+  private readonly sidebar = inject(AdminSidebarService);
 
   isLoading = signal(false);
+  isSaving = signal(false);
+  loadError = signal('');
   services = signal<Servico[]>([]);
+
   showModal = signal(false);
   editingService = signal<Servico | null>(null);
-  showFeedbackModal = signal(false);
-  feedbackType = signal<'success' | 'error' | 'confirm'>('success');
-  feedbackMessage = signal('');
+  showConfirmDelete = signal(false);
+  pendingDelete = signal<Servico | null>(null);
+
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<ToastType>('success');
 
   serviceName = '';
   serviceDuration = 30;
   servicePrice = 0;
 
-  private pendingDeleteId: number | null = null;
+  stats = computed(() => {
+    const list = this.services();
+    if (list.length === 0) {
+      return { count: 0, avgPrice: 0, avgDuration: 0 };
+    }
+    const totalPrice = list.reduce((sum, s) => sum + s.preco, 0);
+    const totalDuration = list.reduce((sum, s) => sum + s.duracao, 0);
+    return {
+      count: list.length,
+      avgPrice: totalPrice / list.length,
+      avgDuration: Math.round(totalDuration / list.length),
+    };
+  });
 
   ngOnInit(): void {
+    this.loadServicos();
+  }
+
+  openMenu(): void {
+    this.sidebar.open();
+  }
+
+  loadServicos(): void {
     this.isLoading.set(true);
+    this.loadError.set('');
     this.servicosService.getServicos().subscribe({
       next: (data) => {
         this.services.set(data);
         this.isLoading.set(false);
       },
       error: () => {
+        this.loadError.set('Não foi possível carregar os serviços. Tente novamente.');
         this.isLoading.set(false);
       },
     });
@@ -67,45 +99,64 @@ export class AdminServicos implements OnInit {
       preco: this.servicePrice,
     };
 
-    if (this.editingService()) {
-      this.servicosService.updateServico(this.editingService()!.id, payload).subscribe({
-        next: (updated) => {
-          this.services.update(list => list.map(s => s.id === updated.id ? updated : s));
-          this.feedbackType.set('success');
-          this.feedbackMessage.set('Serviço atualizado com sucesso!');
-          this.showFeedbackModal.set(true);
-          this.closeModal();
-        },
-        error: () => {
-          this.feedbackType.set('error');
-          this.feedbackMessage.set('Erro ao atualizar serviço. Tente novamente.');
-          this.showFeedbackModal.set(true);
-        },
-      });
-      return;
-    }
+    this.isSaving.set(true);
+    const editing = this.editingService();
 
-    this.servicosService.createServico(payload).subscribe({
-      next: (created) => {
-        this.services.update(list => [...list, created]);
-        this.feedbackType.set('success');
-        this.feedbackMessage.set('Serviço criado com sucesso!');
-        this.showFeedbackModal.set(true);
+    const request = editing
+      ? this.servicosService.updateServico(editing.id, payload)
+      : this.servicosService.createServico(payload);
+
+    request.subscribe({
+      next: (saved) => {
+        if (editing) {
+          this.services.update((list) => list.map((s) => (s.id === saved.id ? saved : s)));
+          this.showToastMessage('Serviço atualizado com sucesso.', 'success');
+        } else {
+          this.services.update((list) => [...list, saved]);
+          this.showToastMessage('Serviço criado com sucesso.', 'success');
+        }
+        this.isSaving.set(false);
         this.closeModal();
       },
       error: () => {
-        this.feedbackType.set('error');
-        this.feedbackMessage.set('Erro ao criar serviço. Tente novamente.');
-        this.showFeedbackModal.set(true);
+        this.isSaving.set(false);
+        this.showToastMessage(
+          editing ? 'Erro ao atualizar serviço.' : 'Erro ao criar serviço.',
+          'error',
+        );
       },
     });
   }
 
-  deleteService(service: Servico): void {
-    this.pendingDeleteId = service.id;
-    this.feedbackType.set('confirm');
-    this.feedbackMessage.set(`Deseja excluir o serviço "${service.nome}"?`);
-    this.showFeedbackModal.set(true);
+  confirmDelete(service: Servico): void {
+    this.pendingDelete.set(service);
+    this.showConfirmDelete.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showConfirmDelete.set(false);
+    this.pendingDelete.set(null);
+  }
+
+  executeDelete(): void {
+    const service = this.pendingDelete();
+    if (!service) return;
+
+    this.servicosService.deleteServico(service.id).subscribe({
+      next: () => {
+        this.services.update((list) => list.filter((s) => s.id !== service.id));
+        this.showToastMessage('Serviço removido com sucesso.', 'success');
+        this.cancelDelete();
+      },
+      error: () => {
+        this.showToastMessage('Erro ao excluir serviço.', 'error');
+        this.cancelDelete();
+      },
+    });
+  }
+
+  dismissToast(): void {
+    this.showToast.set(false);
   }
 
   formatPrice(price: number): string {
@@ -118,30 +169,20 @@ export class AdminServicos implements OnInit {
       const m = minutes % 60;
       return m > 0 ? `${h}h ${m}min` : `${h}h`;
     }
-    return `${minutes}min`;
+    return `${minutes} min`;
   }
 
-  closeFeedbackModal(): void {
-    this.showFeedbackModal.set(false);
-    this.pendingDeleteId = null;
+  serviceInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  handleConfirmAction(): void {
-    if (this.pendingDeleteId === null) return;
-    const id = this.pendingDeleteId;
-    this.servicosService.deleteServico(id).subscribe({
-      next: () => {
-        this.services.update(list => list.filter(s => s.id !== id));
-        this.feedbackType.set('success');
-        this.feedbackMessage.set('Serviço excluído com sucesso!');
-        this.pendingDeleteId = null;
-        this.showFeedbackModal.set(true);
-      },
-      error: () => {
-        this.feedbackType.set('error');
-        this.feedbackMessage.set('Erro ao excluir serviço. Tente novamente.');
-        this.showFeedbackModal.set(true);
-      },
-    });
+  private showToastMessage(message: string, type: ToastType): void {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.showToast.set(true);
+    setTimeout(() => this.showToast.set(false), 4000);
   }
 }

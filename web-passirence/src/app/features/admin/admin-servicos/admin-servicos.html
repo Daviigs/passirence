@@ -1,148 +1,283 @@
-<div class="p-5 lg:p-8">
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Gerenciar Servicos</h1>
-      <p class="text-gray-500 text-sm mt-1">Crie, edite e exclua servicos</p>
+<div class="p-4 sm:p-6 lg:p-8 min-h-full relative">
+
+  @if (showToast()) {
+    <div class="fixed top-4 right-4 left-4 sm:left-auto z-[60] sm:max-w-sm animate-fade-down" role="status">
+      <div
+        class="flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md"
+        [class]="toastType() === 'success'
+          ? 'bg-[#1B2B5E]/95 border-yellow-600/40 text-white'
+          : 'bg-red-950/90 border-red-400/40 text-red-100'"
+      >
+        <p class="text-sm font-medium flex-1">{{ toastMessage() }}</p>
+        <button type="button" class="text-white/50 hover:text-white" (click)="dismissToast()" aria-label="Fechar">×</button>
+      </div>
     </div>
-    <button (click)="openModal()"
-      class="px-4 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer">
-      + Novo Servico
+  }
+
+  <header class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 animate-fade-down">
+    <div class="flex items-start gap-3">
+      <button
+        type="button"
+        class="lg:hidden shrink-0 p-2.5 rounded-xl bg-black/25 border border-white/10 text-white hover:border-yellow-600/40 transition-all"
+        aria-label="Abrir menu"
+        (click)="openMenu()"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <div>
+        <p class="text-white/50 text-xs font-bold uppercase tracking-[0.2em] mb-1">Administração</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Serviços</h1>
+        <p class="text-white/60 text-sm mt-1.5 max-w-xl">
+          Cadastre cortes, barbas e demais atendimentos oferecidos pela barbearia.
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] shadow-lg shadow-[#0066ff]/25 hover:shadow-xl hover:-translate-y-0.5 transition-all border border-white/10 hover:border-yellow-600/30 shrink-0"
+      (click)="openModal()"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Novo serviço
     </button>
-  </div>
+  </header>
+
+  @if (!isLoading() && services().length > 0) {
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 animate-fade-up">
+      <div class="rounded-xl border border-white/10 bg-[#1B2B5E]/70 backdrop-blur-sm px-4 py-3">
+        <p class="text-white/40 text-[0.65rem] font-bold uppercase tracking-widest mb-1">Cadastrados</p>
+        <p class="text-white text-2xl font-black tabular-nums">{{ stats().count }}</p>
+      </div>
+      <div class="rounded-xl border border-white/10 bg-[#1B2B5E]/70 backdrop-blur-sm px-4 py-3">
+        <p class="text-white/40 text-[0.65rem] font-bold uppercase tracking-widest mb-1">Preço médio</p>
+        <p class="text-yellow-600 text-2xl font-black tabular-nums">R$ {{ formatPrice(stats().avgPrice) }}</p>
+      </div>
+      <div class="rounded-xl border border-white/10 bg-[#1B2B5E]/70 backdrop-blur-sm px-4 py-3">
+        <p class="text-white/40 text-[0.65rem] font-bold uppercase tracking-widest mb-1">Duração média</p>
+        <p class="text-white text-2xl font-black">{{ formatDuration(stats().avgDuration) }}</p>
+      </div>
+    </section>
+  }
+
+  @if (loadError()) {
+    <div class="mb-6 p-4 rounded-xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm animate-fade-up">
+      {{ loadError() }}
+      <button type="button" class="block mt-2 text-white underline text-xs" (click)="loadServicos()">Tentar novamente</button>
+    </div>
+  }
 
   @if (isLoading()) {
-    <div class="flex items-center justify-center h-48">
-      <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0066ff] rounded-full animate-spin"></div>
-    </div>
-  } @else if (services().length === 0) {
-    <div class="bg-white/95 rounded-xl shadow-sm border border-white/20 p-12 text-center">
-      <p class="text-gray-500 mb-2">Nenhum servico cadastrado</p>
-      <p class="text-gray-400 text-sm">Clique em "Novo Servico" para comecar</p>
-    </div>
-  } @else {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      @for (service of services(); track service.id) {
-        <div class="bg-white/95 rounded-xl shadow-sm border border-white/20 p-5">
-          <div class="flex items-start justify-between mb-3">
-            <h3 class="font-semibold text-gray-900 text-base">{{ service.nome }}</h3>
-            <div class="flex gap-2 ml-2 shrink-0">
-              <button (click)="openModal(service)" title="Editar"
-                class="p-1.5 text-gray-400 hover:text-[#0066ff] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-              </button>
-              <button (click)="deleteService(service)" title="Excluir"
-                class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </button>
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="rounded-2xl border border-white/10 bg-[#1B2B5E]/60 p-5 space-y-4 animate-pulse">
+          <div class="flex gap-3">
+            <div class="w-12 h-12 rounded-full bg-white/10"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-2/3 bg-white/10 rounded"></div>
+              <div class="h-3 w-1/2 bg-white/10 rounded"></div>
             </div>
           </div>
-          <div class="flex gap-2 flex-wrap">
-            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-              {{ formatDuration(service.duracao) }}
-            </span>
-            <span class="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-              R$ {{ formatPrice(service.preco) }}
-            </span>
-          </div>
+          <div class="h-3 w-full bg-white/10 rounded"></div>
+          <div class="h-9 w-full bg-white/10 rounded-lg"></div>
         </div>
+      }
+    </div>
+  } @else if (services().length === 0) {
+    <div class="text-center py-16 px-6 rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md animate-fade-up">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-black/25 border border-white/10 flex items-center justify-center text-3xl">✂️</div>
+      <h3 class="text-white font-bold text-lg mb-2">Nenhum serviço cadastrado</h3>
+      <p class="text-white/50 text-sm mb-6 max-w-sm mx-auto">
+        Adicione os serviços que os clientes podem escolher ao agendar um horário.
+      </p>
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all"
+        (click)="openModal()"
+      >
+        + Criar serviço
+      </button>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-up">
+      @for (service of services(); track service.id) {
+        <article
+          class="rounded-2xl border border-white/10 bg-[#1B2B5E]/90 backdrop-blur-md p-5 transition-all duration-300 hover:border-yellow-600/30 hover:shadow-lg hover:shadow-black/20 group"
+        >
+          <div class="flex items-start gap-3 mb-4">
+            <div
+              class="w-12 h-12 rounded-full bg-gradient-to-br from-[#0066ff] to-[#0052cc] flex items-center justify-center text-white text-sm font-black ring-2 ring-yellow-600/20 shrink-0"
+            >
+              {{ serviceInitials(service.nome) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-yellow-600 text-xs font-bold uppercase tracking-wider mb-0.5">Serviço</p>
+              <h3 class="text-white font-bold text-lg leading-tight truncate">{{ service.nome }}</h3>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-sm mb-4">
+            <div class="flex justify-between text-white/60">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Duração
+              </span>
+              <span class="text-white font-medium">{{ formatDuration(service.duracao) }}</span>
+            </div>
+            <div class="flex justify-between text-white/60">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Valor
+              </span>
+              <span class="text-yellow-600 font-bold tabular-nums">R$ {{ formatPrice(service.preco) }}</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-3 border-t border-white/10">
+            <button
+              type="button"
+              title="Editar"
+              class="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider text-white/70 bg-white/5 border border-white/10 hover:bg-[#0066ff]/20 hover:border-[#0066ff]/40 hover:text-white transition-all"
+              (click)="openModal(service)"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              title="Excluir"
+              class="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-400/30 transition-all"
+              (click)="confirmDelete(service)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </article>
       }
     </div>
   }
 
   @if (showModal()) {
-    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      (click)="closeModal()">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 class="text-lg font-semibold text-gray-900">
-            @if (editingService()) { Editar Servico } @else { Novo Servico }
+    <div
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      (click)="closeModal()"
+    >
+      <div
+        class="w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#1B2B5E] shadow-2xl animate-slide-up"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#1B2B5E]/95 backdrop-blur-sm">
+          <h3 class="text-lg font-black text-white">
+            @if (editingService()) { Editar serviço } @else { Novo serviço }
           </h3>
-          <button (click)="closeModal()"
-            class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <button
+            type="button"
+            class="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            (click)="closeModal()"
+            aria-label="Fechar"
+          >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div class="p-6 flex flex-col gap-4">
+
+        <div class="p-5 flex flex-col gap-4">
           <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Nome</label>
-            <input type="text" [(ngModel)]="serviceName" placeholder="Ex: Corte Masculino"
-              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"/>
+            <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Nome *</label>
+            <input
+              type="text"
+              [(ngModel)]="serviceName"
+              placeholder="Ex: Corte masculino"
+              class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-yellow-600/50 focus:ring-2 focus:ring-yellow-600/20 transition-all"
+            />
           </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Duracao (minutos)</label>
-            <input type="number" [(ngModel)]="serviceDuration" placeholder="Ex: 30" min="5"
-              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"/>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Preco (R$)</label>
-            <input type="number" [(ngModel)]="servicePrice" placeholder="Ex: 35.00" step="0.01" min="0"
-              class="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20 transition-all"/>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Duração (min) *</label>
+              <input
+                type="number"
+                [(ngModel)]="serviceDuration"
+                placeholder="30"
+                min="5"
+                class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-yellow-600/50 focus:ring-2 focus:ring-yellow-600/20 transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-widest mb-1.5">Preço (R$) *</label>
+              <input
+                type="number"
+                [(ngModel)]="servicePrice"
+                placeholder="35.00"
+                step="0.01"
+                min="0"
+                class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-black/25 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-yellow-600/50 focus:ring-2 focus:ring-yellow-600/20 transition-all"
+              />
+            </div>
           </div>
         </div>
-        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-100">
-          <button (click)="closeModal()"
-            class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+
+        <div class="flex gap-3 justify-end px-5 py-4 border-t border-white/10">
+          <button
+            type="button"
+            class="px-4 py-2.5 rounded-xl text-sm font-bold text-white/70 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+            (click)="closeModal()"
+          >
             Cancelar
           </button>
-          <button (click)="saveService()"
-            class="px-4 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer">
-            Salvar
+          <button
+            type="button"
+            class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#0066ff] to-[#0052cc] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="!serviceName.trim() || isSaving()"
+            (click)="saveService()"
+          >
+            @if (isSaving()) { Salvando… } @else { Salvar }
           </button>
         </div>
       </div>
     </div>
   }
 
-  @if (showFeedbackModal()) {
-    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      (click)="feedbackType() !== 'confirm' ? closeFeedbackModal() : null">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" (click)="$event.stopPropagation()">
-        @if (feedbackType() === 'success') {
-          <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-        } @else if (feedbackType() === 'error') {
-          <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </div>
-        } @else {
-          <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </div>
-        }
-        <p class="text-gray-800 font-medium mb-5">{{ feedbackMessage() }}</p>
-        @if (feedbackType() === 'confirm') {
-          <div class="flex gap-3 justify-center">
-            <button (click)="closeFeedbackModal()"
-              class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
-              Cancelar
-            </button>
-            <button (click)="handleConfirmAction()"
-              class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors cursor-pointer">
-              Confirmar
-            </button>
-          </div>
-        } @else {
-          <button (click)="closeFeedbackModal()"
-            class="px-6 py-2 bg-[#0066ff] text-white text-sm font-bold rounded-lg hover:bg-[#0052cc] transition-colors cursor-pointer">
-            OK
+  @if (showConfirmDelete()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      (click)="cancelDelete()"
+    >
+      <div
+        class="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1B2B5E] p-6 text-center shadow-2xl"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="w-14 h-14 bg-yellow-600/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-yellow-600/30">
+          <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <p class="text-white font-bold mb-2">Remover serviço?</p>
+        <p class="text-white/50 text-sm mb-6">{{ pendingDelete()?.nome }}</p>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/70 bg-white/5 border border-white/10 hover:bg-white/10"
+            (click)="cancelDelete()"
+          >
+            Cancelar
           </button>
-        }
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-500 transition-colors"
+            (click)="executeDelete()"
+          >
+            Remover
+          </button>
+        </div>
       </div>
     </div>
   }
