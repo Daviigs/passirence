@@ -1,4 +1,9 @@
-import type { AppointmentMessagePayload, SendMessagePayload } from '../types/index.js';
+import type {
+  AppointmentCancelPayload,
+  AppointmentConfirmationPayload,
+  AppointmentReminderPayload,
+  SendMessagePayload,
+} from '../types/index.js';
 import {
   buildAppointmentCancelMessage,
   buildAppointmentConfirmationMessage,
@@ -11,17 +16,17 @@ export class MessagesService {
     return whatsappManager.sendTextMessage(payload.phone, payload.message);
   }
 
-  async sendAppointmentConfirmation(payload: AppointmentMessagePayload) {
+  async sendAppointmentConfirmation(payload: AppointmentConfirmationPayload) {
     const message = buildAppointmentConfirmationMessage(payload);
     return whatsappManager.sendTextMessage(payload.phone, message);
   }
 
-  async sendAppointmentCancel(payload: AppointmentMessagePayload) {
+  async sendAppointmentCancel(payload: AppointmentCancelPayload) {
     const message = buildAppointmentCancelMessage(payload);
     return whatsappManager.sendTextMessage(payload.phone, message);
   }
 
-  async sendAppointmentReminder(payload: AppointmentMessagePayload) {
+  async sendAppointmentReminder(payload: AppointmentReminderPayload) {
     const message = buildAppointmentReminderMessage(payload);
     return whatsappManager.sendTextMessage(payload.phone, message);
   }

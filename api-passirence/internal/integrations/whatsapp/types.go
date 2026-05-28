@@ -1,6 +1,15 @@
 package whatsapp
 
-// AppointmentConfirmationRequest is the payload sent to POST /messages/appointment/confirmation.
+// AppointmentMessageRequest is the base payload for appointment WhatsApp notifications.
+type AppointmentMessageRequest struct {
+	Phone      string `json:"phone"`
+	ClientName string `json:"clientName"`
+	Service    string `json:"service"`
+	Date       string `json:"date"`
+	Time       string `json:"time"`
+}
+
+// AppointmentConfirmationRequest is sent to POST /messages/appointment/confirmation.
 type AppointmentConfirmationRequest struct {
 	Phone      string  `json:"phone"`
 	ClientName string  `json:"clientName"`
@@ -10,9 +19,8 @@ type AppointmentConfirmationRequest struct {
 	TotalPrice float64 `json:"totalPrice"`
 }
 
-type apiSuccessResponse struct {
-	Success bool `json:"success"`
-}
+// AppointmentCancelRequest is sent to POST /messages/appointment/cancel.
+type AppointmentCancelRequest = AppointmentMessageRequest
 
 type apiErrorResponse struct {
 	Success bool   `json:"success"`

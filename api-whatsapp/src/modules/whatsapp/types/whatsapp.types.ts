@@ -24,11 +24,21 @@ export interface SendMessagePayload {
   message: string;
 }
 
-export interface AppointmentMessagePayload {
+export interface AppointmentBasePayload {
   phone: string;
   clientName: string;
   service: string;
   date: string;
   time: string;
+}
+
+export interface AppointmentConfirmationPayload extends AppointmentBasePayload {
   totalPrice: number;
 }
+
+export type AppointmentCancelPayload = AppointmentBasePayload;
+
+export type AppointmentReminderPayload = AppointmentBasePayload;
+
+/** @deprecated Use AppointmentConfirmationPayload */
+export type AppointmentMessagePayload = AppointmentConfirmationPayload;

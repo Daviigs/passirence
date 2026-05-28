@@ -385,7 +385,14 @@ func (s *AppointmentService) CancelAppointment(ctx context.Context, id int) (*dt
 		return nil, apperror.Internal("falha ao cancelar agendamento")
 	}
 
-	return s.GetByID(ctx, id)
+	result, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	s.notifications.NotifyAppointmentCancellation(ctx, result, result.ServiceIDs)
+
+	return result, nil
 }
 
 func (s *AppointmentService) FinishAppointment(ctx context.Context, id int) (*dtos.AppointmentResponse, error) {

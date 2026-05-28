@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { validateBody } from '../../../shared/middlewares/index.js';
 import { messagesController } from '../controllers/messages.controller.js';
 import {
-  appointmentMessageSchema,
+  appointmentCancelSchema,
+  appointmentConfirmationSchema,
   sendMessageSchema,
 } from '../validators/messages.validator.js';
 
@@ -16,18 +17,18 @@ messagesRoutes.post(
 
 messagesRoutes.post(
   '/appointment/confirmation',
-  validateBody(appointmentMessageSchema),
+  validateBody(appointmentConfirmationSchema),
   (req, res, next) => messagesController.sendConfirmation(req, res, next),
 );
 
 messagesRoutes.post(
   '/appointment/cancel',
-  validateBody(appointmentMessageSchema),
+  validateBody(appointmentCancelSchema),
   (req, res, next) => messagesController.sendCancel(req, res, next),
 );
 
 messagesRoutes.post(
   '/appointment/reminder',
-  validateBody(appointmentMessageSchema),
+  validateBody(appointmentCancelSchema),
   (req, res, next) => messagesController.sendReminder(req, res, next),
 );

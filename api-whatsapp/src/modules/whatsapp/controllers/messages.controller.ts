@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type {
-  AppointmentMessagePayload,
+  AppointmentCancelPayload,
+  AppointmentConfirmationPayload,
+  AppointmentReminderPayload,
   SendMessagePayload,
 } from '../types/index.js';
 import { messagesService } from '../services/index.js';
@@ -18,7 +20,7 @@ export class MessagesController {
 
   async sendConfirmation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const payload = req.body as AppointmentMessagePayload;
+      const payload = req.body as AppointmentConfirmationPayload;
       const result = await messagesService.sendAppointmentConfirmation(payload);
       res.json({ success: true, data: result });
     } catch (error) {
@@ -28,7 +30,7 @@ export class MessagesController {
 
   async sendCancel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const payload = req.body as AppointmentMessagePayload;
+      const payload = req.body as AppointmentCancelPayload;
       const result = await messagesService.sendAppointmentCancel(payload);
       res.json({ success: true, data: result });
     } catch (error) {
@@ -38,7 +40,7 @@ export class MessagesController {
 
   async sendReminder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const payload = req.body as AppointmentMessagePayload;
+      const payload = req.body as AppointmentReminderPayload;
       const result = await messagesService.sendAppointmentReminder(payload);
       res.json({ success: true, data: result });
     } catch (error) {

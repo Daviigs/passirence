@@ -16,13 +16,21 @@ export const sendMessageSchema = z.object({
   message: nonEmptyString('Mensagem'),
 });
 
-export const appointmentMessageSchema = z.object({
+const appointmentBaseSchema = z.object({
   phone: phoneSchema,
   clientName: nonEmptyString('Nome do cliente'),
   service: nonEmptyString('Serviço'),
   date: nonEmptyString('Data'),
   time: nonEmptyString('Horário'),
+});
+
+export const appointmentConfirmationSchema = appointmentBaseSchema.extend({
   totalPrice: z.coerce
     .number({ required_error: 'Valor total é obrigatório' })
     .min(0, 'Valor total inválido'),
 });
+
+export const appointmentCancelSchema = appointmentBaseSchema;
+
+/** @deprecated Use appointmentConfirmationSchema */
+export const appointmentMessageSchema = appointmentConfirmationSchema;

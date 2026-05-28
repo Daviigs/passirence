@@ -38,6 +38,17 @@ func (c *Client) SendAppointmentConfirmation(
 	ctx context.Context,
 	payload AppointmentConfirmationRequest,
 ) error {
+	return c.post(ctx, "/messages/appointment/confirmation", payload)
+}
+
+func (c *Client) SendAppointmentCancel(
+	ctx context.Context,
+	payload AppointmentCancelRequest,
+) error {
+	return c.post(ctx, "/messages/appointment/cancel", payload)
+}
+
+func (c *Client) post(ctx context.Context, path string, payload any) error {
 	if !c.enabled {
 		return nil
 	}
@@ -47,7 +58,7 @@ func (c *Client) SendAppointmentConfirmation(
 		return fmt.Errorf("whatsapp: marshal payload: %w", err)
 	}
 
-	url := c.baseURL + "/messages/appointment/confirmation"
+	url := c.baseURL + path
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("whatsapp: create request: %w", err)

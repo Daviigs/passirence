@@ -1,8 +1,12 @@
-import type { AppointmentMessagePayload } from '../types/index.js';
+import type {
+  AppointmentCancelPayload,
+  AppointmentConfirmationPayload,
+  AppointmentReminderPayload,
+} from '../types/index.js';
 import { formatCurrencyBRL } from '../utils/currency.util.js';
 
 export function buildAppointmentConfirmationMessage(
-  payload: AppointmentMessagePayload,
+  payload: AppointmentConfirmationPayload,
 ): string {
   const totalFormatted = formatCurrencyBRL(payload.totalPrice);
 
@@ -19,18 +23,19 @@ export function buildAppointmentConfirmationMessage(
   );
 }
 
-export function buildAppointmentCancelMessage(payload: AppointmentMessagePayload): string {
+export function buildAppointmentCancelMessage(payload: AppointmentCancelPayload): string {
   return (
-    `Olá, ${payload.clientName}.\n\n` +
-    `Seu agendamento foi cancelado:\n` +
-    `• Serviço: ${payload.service}\n` +
-    `• Data: ${payload.date}\n` +
-    `• Horário: ${payload.time}\n\n` +
-    `Para reagendar, entre em contato conosco.`
+    `*Agendamento Cancelado!* ❌\n\n` +
+    `Olá, ${payload.clientName}! 👊\n\n` +
+    `Seu agendamento foi cancelado com sucesso.\n\n` +
+    `📅 *Data:* ${payload.date}\n` +
+    `⏰ *Horário:* ${payload.time}\n` +
+    `✂️ *Serviço:* ${payload.service}\n\n` +
+    `Caso queira, você poderá realizar um novo agendamento diretamente pelo sistema. 🤝`
   );
 }
 
-export function buildAppointmentReminderMessage(payload: AppointmentMessagePayload): string {
+export function buildAppointmentReminderMessage(payload: AppointmentReminderPayload): string {
   return (
     `Olá, ${payload.clientName}! ⏰\n\n` +
     `Lembrete do seu agendamento:\n` +
