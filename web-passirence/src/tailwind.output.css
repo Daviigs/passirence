@@ -1868,9 +1868,6 @@
   .text-blue-200 {
     color: var(--color-blue-200);
   }
-  .text-blue-700 {
-    color: var(--color-blue-700);
-  }
   .text-gray-400 {
     color: var(--color-gray-400);
   }
@@ -2602,13 +2599,6 @@
       }
     }
   }
-  .hover\:bg-red-50 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-red-50);
-      }
-    }
-  }
   .hover\:bg-red-100 {
     &:hover {
       @media (hover: hover) {
@@ -2738,13 +2728,6 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-red-400);
-      }
-    }
-  }
-  .hover\:text-red-500 {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-red-500);
       }
     }
   }
