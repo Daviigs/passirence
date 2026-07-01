@@ -62,4 +62,58 @@ func TestCanTransitionStatus(t *testing.T) {
 	if CanTransitionStatus("cancelled", "scheduled") {
 		t.Fatal("cancelled -> scheduled not allowed")
 	}
+	if !CanTransitionStatus("scheduled", "scheduled") {
+		t.Fatal("same status should be allowed")
+	}
+	if CanTransitionStatus("completed", "cancelled") {
+		t.Fatal("completed -> cancelled not allowed")
+	}
+}
+
+func TestNormalizeAppointmentStatus_defaultAndWhitespace(t *testing.T) {
+	if got := NormalizeAppointmentStatus("  "); got != AppointmentStatusScheduled {
+		t.Fatalf("empty/whitespace should default to scheduled, got %q", got)
+	}
+	if got := NormalizeAppointmentStatus("unknown"); got != AppointmentStatusScheduled {
+		t.Fatalf("unknown status should default to scheduled, got %q", got)
+	}
+	if got := NormalizeAppointmentStatus("FINALIZADO"); got != AppointmentStatusCompleted {
+		t.Fatalf("case insensitive legacy, got %q", got)
+	}
+}
+
+func TestIsValidAppointmentStatus(t *testing.T) {
+	for _, status := range []string{"scheduled", "completed", "cancelled", "confirmed", "finished"} {
+		if !IsValidAppointmentStatus(status) {
+			t.Fatalf("%q should be valid", status)
+		}
+	}
+}
+
+func TestIsActiveAppointmentStatus(t *testing.T) {
+	if !IsActiveAppointmentStatus("scheduled") {
+		t.Fatal("scheduled is active")
+	}
+	if IsActiveAppointmentStatus("completed") {
+		t.Fatal("completed is not active")
+	}
+	if !IsActiveAppointmentStatus("confirmed") {
+		t.Fatal("legacy confirmed maps to active scheduled")
+	}
+}
+
+func TestFilterScheduleBlockingAppointments_empty(t *testing.T) {
+	if got := FilterScheduleBlockingAppointments(nil); got != nil {
+		t.Fatalf("nil input should return nil, got %v", got)
+	}
+	if len(FilterScheduleBlockingAppointments([]Appointment{})) != 0 {
+		t.Fatal("empty slice should return empty slice")
+	}
+}
+
+func TestOfficialAppointmentStatuses(t *testing.T) {
+	statuses := OfficialAppointmentStatuses()
+	if len(statuses) != 3 {
+		t.Fatalf("expected 3 official statuses, got %d", len(statuses))
+	}
 }

@@ -31,6 +31,3 @@ export const appointmentConfirmationSchema = appointmentBaseSchema.extend({
 });
 
 export const appointmentCancelSchema = appointmentBaseSchema;
-
-/** @deprecated Use appointmentConfirmationSchema */
-export const appointmentMessageSchema = appointmentConfirmationSchema;

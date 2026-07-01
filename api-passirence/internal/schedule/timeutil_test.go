@@ -1,6 +1,9 @@
 package schedule
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestGenerateGridSlotStarts(t *testing.T) {
 	slots := GenerateGridSlotStarts(8*60, 18*60, 60, 30)
@@ -121,5 +124,106 @@ func assertNotContains(t *testing.T, slots []string, unexpected string) {
 		if slot == unexpected {
 			t.Fatalf("did not expect %s in %v", unexpected, slots)
 		}
+	}
+}
+
+func TestMinutesFromTime(t *testing.T) {
+	m, err := MinutesFromTime("14:30")
+	if err != nil || m != 14*60+30 {
+		t.Fatalf("MinutesFromTime = %d err=%v", m, err)
+	}
+	if _, err := MinutesFromTime("25:00"); err == nil {
+		t.Fatal("invalid time should fail")
+	}
+}
+
+func TestTimeFromMinutes(t *testing.T) {
+	if got := TimeFromMinutes(8*60 + 5); got != "08:05" {
+		t.Fatalf("TimeFromMinutes = %q", got)
+	}
+}
+
+func TestAddMinutesToTime(t *testing.T) {
+	got, err := AddMinutesToTime("10:00", 45)
+	if err != nil || got != "10:45" {
+		t.Fatalf("AddMinutesToTime = %q err=%v", got, err)
+	}
+	if _, err := AddMinutesToTime("invalid", 30); err == nil {
+		t.Fatal("invalid start should fail")
+	}
+}
+
+func TestGenerateGridSlotStarts_edgeCases(t *testing.T) {
+	if got := GenerateGridSlotStarts(8*60, 18*60, 0, 30); got != nil {
+		t.Fatal("zero duration should return nil")
+	}
+	if got := GenerateGridSlotStarts(8*60, 18*60, 30, 0); got != nil {
+		t.Fatal("zero interval should return nil")
+	}
+	if got := GenerateGridSlotStarts(18*60, 8*60, 30, 30); got != nil {
+		t.Fatal("open >= close should return nil")
+	}
+}
+
+func TestExtractReleaseTimes(t *testing.T) {
+	busy := []TimeRange{{Start: 9 * 60, End: 9*60 + 40}}
+	releases := ExtractReleaseTimes(busy, 8*60, 18*60, 30)
+	if len(releases) != 1 || releases[0] != 9*60+40 {
+		t.Fatalf("unexpected releases: %v", releases)
+	}
+
+	if got := ExtractReleaseTimes(busy, 18*60, 18*60, 30); got != nil {
+		t.Fatal("maxStart < open should return nil")
+	}
+
+	dupBusy := []TimeRange{
+		{Start: 9 * 60, End: 10 * 60},
+		{Start: 11 * 60, End: 10 * 60},
+	}
+	dupReleases := ExtractReleaseTimes(dupBusy, 8*60, 18*60, 30)
+	if len(dupReleases) != 1 {
+		t.Fatalf("duplicate release times should dedupe, got %v", dupReleases)
+	}
+}
+
+func TestFilterPastSlotsForToday_invalidDate(t *testing.T) {
+	loc := mustLocation(t, "America/Sao_Paulo")
+	slots := []string{"10:00", "11:00"}
+	got := FilterPastSlotsForToday("invalid-date", loc, slots, time.Now())
+	if len(got) != 2 {
+		t.Fatal("invalid date should return slots unchanged")
+	}
+}
+
+func TestFilterPastSlotsForToday_skipsInvalidSlot(t *testing.T) {
+	loc := mustLocation(t, "America/Sao_Paulo")
+	now := time.Date(2026, 5, 27, 14, 0, 0, 0, loc)
+	slots := []string{"invalid", "15:00"}
+	got := FilterPastSlotsForToday("2026-05-27", loc, slots, now)
+	if len(got) != 1 || got[0] != "15:00" {
+		t.Fatalf("invalid slot should be skipped, got %v", got)
+	}
+}
+
+func TestParseDate(t *testing.T) {
+	loc := mustLocation(t, "America/Sao_Paulo")
+	parsed, err := ParseDate("2026-07-01", loc)
+	if err != nil || parsed.Year() != 2026 || parsed.Month() != 7 || parsed.Day() != 1 {
+		t.Fatalf("ParseDate = %v err=%v", parsed, err)
+	}
+}
+
+func TestToTimeRanges(t *testing.T) {
+	tr, err := ToTimeRanges("09:15", "10:45")
+	if err != nil || tr.Start != 9*60+15 || tr.End != 10*60+45 {
+		t.Fatalf("ToTimeRanges = %+v err=%v", tr, err)
+	}
+}
+
+func TestGenerateSlotStarts_alias(t *testing.T) {
+	grid := GenerateGridSlotStarts(8*60, 10*60, 30, 30)
+	alias := GenerateSlotStarts(8*60, 10*60, 30, 30)
+	if len(grid) != len(alias) {
+		t.Fatal("GenerateSlotStarts should match GenerateGridSlotStarts")
 	}
 }

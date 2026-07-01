@@ -48,3 +48,19 @@ func TestAppointmentBusyRanges_ignoresFinishedAndCanceledUS(t *testing.T) {
 		t.Fatalf("expected no busy ranges, got %d", len(busy))
 	}
 }
+
+func TestAppointmentBusyRanges_invalidTime(t *testing.T) {
+	appointments := []models.Appointment{
+		{StartTime: "invalid", EndTime: "10:00", Status: models.AppointmentStatusScheduled},
+	}
+	if _, err := appointmentBusyRanges(appointments); err == nil {
+		t.Fatal("invalid appointment time should fail")
+	}
+}
+
+func TestAppointmentBusyRanges_empty(t *testing.T) {
+	busy, err := appointmentBusyRanges(nil)
+	if err != nil || len(busy) != 0 {
+		t.Fatalf("empty appointments should return empty busy, got %v err=%v", busy, err)
+	}
+}
