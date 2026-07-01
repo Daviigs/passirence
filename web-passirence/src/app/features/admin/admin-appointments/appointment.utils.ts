@@ -69,6 +69,71 @@ export function getEventHeightPercent(startTime: string, endTime: string, daySta
   return Math.max(((end - start) / range) * 100, 4);
 }
 
+export interface CalendarEventLayout {
+  leftPercent: number;
+  widthPercent: number;
+}
+
+interface TimedLayoutEvent {
+  event: AppointmentCalendarEvent;
+  start: number;
+  end: number;
+  column: number;
+}
+
+function eventsTimeOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
+  return a.start < b.end && b.start < a.end;
+}
+
+/** Distribui eventos sobrepostos lado a lado; status não influencia posição. */
+export function layoutCalendarEvents(events: AppointmentCalendarEvent[]): Map<number, CalendarEventLayout> {
+  const result = new Map<number, CalendarEventLayout>();
+  if (events.length === 0) return result;
+
+  const sorted: TimedLayoutEvent[] = [...events]
+    .map((event) => ({
+      event,
+      start: timeToMinutes(event.startTime.slice(0, 5)),
+      end: timeToMinutes(event.endTime.slice(0, 5)),
+      column: 0,
+    }))
+    .sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      return b.end - a.end;
+    });
+
+  const columns: TimedLayoutEvent[][] = [];
+
+  for (const item of sorted) {
+    let placed = false;
+    for (let col = 0; col < columns.length; col++) {
+      const lastInColumn = columns[col][columns[col].length - 1];
+      if (lastInColumn.end <= item.start) {
+        columns[col].push(item);
+        item.column = col;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      item.column = columns.length;
+      columns.push([item]);
+    }
+  }
+
+  for (const item of sorted) {
+    const overlapping = sorted.filter((other) => eventsTimeOverlap(item, other));
+    const columnsInCluster = Math.max(...overlapping.map((e) => e.column)) + 1;
+    const widthPercent = 100 / columnsInCluster;
+    result.set(item.event.id, {
+      leftPercent: item.column * widthPercent,
+      widthPercent,
+    });
+  }
+
+  return result;
+}
+
 export function matchesSearch(event: AppointmentCalendarEvent, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;

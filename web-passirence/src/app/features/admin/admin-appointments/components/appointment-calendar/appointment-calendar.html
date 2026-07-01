@@ -61,11 +61,14 @@
             </div>
           }
 
-          @for (event of eventsForColumn(col.id); track event.id) {
+          @let column = columnData(col.id);
+          @for (event of column.events; track event.id) {
             <div
-              class="absolute left-1 right-1 z-20 min-h-[40px]"
+              class="absolute z-20 min-h-[40px]"
               [style.top]="top(event)"
               [style.height]="height(event)"
+              [style.left]="eventLeft(column.layouts, event)"
+              [style.width]="eventWidth(column.layouts, event)"
             >
               <app-appointment-card [event]="event" [compact]="true" (select)="selectEvent.emit($event)" />
             </div>

@@ -3,8 +3,10 @@ import { ScheduleBlock } from '../../../schedule-blocks/models/schedule-block.mo
 import { AppointmentCalendarEvent } from '../../models/appointment-view.model';
 import {
   buildTimeSlots,
+  CalendarEventLayout,
   getEventHeightPercent,
   getEventTopPercent,
+  layoutCalendarEvents,
   timeToMinutes,
 } from '../../appointment.utils';
 import { AppointmentCard } from '../appointment-card/appointment-card';
@@ -47,6 +49,26 @@ export class AppointmentCalendar {
     return this.events().filter((e) =>
       professionalId === null ? true : e.professionalId === professionalId,
     );
+  }
+
+  columnData(professionalId: number | null): {
+    events: AppointmentCalendarEvent[];
+    layouts: Map<number, CalendarEventLayout>;
+  } {
+    const events = this.eventsForColumn(professionalId);
+    return { events, layouts: layoutCalendarEvents(events) };
+  }
+
+  eventLeft(layouts: Map<number, CalendarEventLayout>, event: AppointmentCalendarEvent): string {
+    const layout = layouts.get(event.id);
+    if (!layout) return '4px';
+    return `calc(${layout.leftPercent}% + 4px)`;
+  }
+
+  eventWidth(layouts: Map<number, CalendarEventLayout>, event: AppointmentCalendarEvent): string {
+    const layout = layouts.get(event.id);
+    if (!layout) return 'calc(100% - 8px)';
+    return `calc(${layout.widthPercent}% - 8px)`;
   }
 
   blocksForColumn(professionalId: number | null): ScheduleBlock[] {

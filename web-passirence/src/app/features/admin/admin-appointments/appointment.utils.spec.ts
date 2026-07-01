@@ -7,6 +7,7 @@ import {
   buildTimeSlots,
   getEventTopPercent,
   getEventHeightPercent,
+  layoutCalendarEvents,
   matchesSearch,
   matchesStatusFilter,
   isAppointmentEditable,
@@ -59,6 +60,73 @@ describe('appointment.utils', () => {
     it('retorna fallback quando range inválido', () => {
       expect(getEventTopPercent('10:00', 600, 600)).toBe(0);
       expect(getEventHeightPercent('10:00', '11:00', 600, 600)).toBe(4);
+    });
+  });
+
+  describe('layoutCalendarEvents', () => {
+    const base = {
+      clientId: 1,
+      professionalId: 1,
+      serviceIds: [1],
+      date: '2026-07-01',
+      clientName: 'Cliente',
+      clientPhone: '11999999999',
+      serviceLabel: 'Serviço',
+      professionalName: 'Prof',
+      statusLabel: 'Agendado',
+      services: ['Serviço'],
+      serviceItems: [{ id: 1, name: 'Serviço' }],
+    } as const;
+
+    it('evento único ocupa largura total', () => {
+      const events: AppointmentCalendarEvent[] = [
+        { ...base, id: 1, status: 'scheduled', startTime: '10:00', endTime: '11:00' },
+      ];
+      const layout = layoutCalendarEvents(events).get(1)!;
+      expect(layout.leftPercent).toBe(0);
+      expect(layout.widthPercent).toBe(100);
+    });
+
+    it('dois eventos no mesmo horário ficam lado a lado', () => {
+      const events: AppointmentCalendarEvent[] = [
+        { ...base, id: 1, status: 'cancelled', startTime: '10:00', endTime: '11:00' },
+        { ...base, id: 2, status: 'scheduled', startTime: '10:00', endTime: '11:00' },
+      ];
+      const layouts = layoutCalendarEvents(events);
+      expect(layouts.get(1)).toEqual({ leftPercent: 0, widthPercent: 50 });
+      expect(layouts.get(2)).toEqual({ leftPercent: 50, widthPercent: 50 });
+    });
+
+    it('três eventos no mesmo horário dividem em três colunas', () => {
+      const events: AppointmentCalendarEvent[] = [
+        { ...base, id: 1, status: 'scheduled', startTime: '10:00', endTime: '11:00' },
+        { ...base, id: 2, status: 'cancelled', startTime: '10:00', endTime: '11:00' },
+        { ...base, id: 3, status: 'completed', startTime: '10:00', endTime: '11:00' },
+      ];
+      const layouts = layoutCalendarEvents(events);
+      expect(layouts.get(1)).toEqual({ leftPercent: 0, widthPercent: 100 / 3 });
+      expect(layouts.get(2)).toEqual({ leftPercent: 100 / 3, widthPercent: 100 / 3 });
+      expect(layouts.get(3)).toEqual({ leftPercent: (100 / 3) * 2, widthPercent: 100 / 3 });
+    });
+
+    it('eventos com durações diferentes no mesmo início compartilham colunas', () => {
+      const events: AppointmentCalendarEvent[] = [
+        { ...base, id: 1, status: 'scheduled', startTime: '10:00', endTime: '12:00' },
+        { ...base, id: 2, status: 'cancelled', startTime: '10:00', endTime: '11:00' },
+      ];
+      const layouts = layoutCalendarEvents(events);
+      expect(layouts.get(1)).toEqual({ leftPercent: 0, widthPercent: 50 });
+      expect(layouts.get(2)).toEqual({ leftPercent: 50, widthPercent: 50 });
+    });
+
+    it('eventos sem sobreposição mantêm largura total', () => {
+      const events: AppointmentCalendarEvent[] = [
+        { ...base, id: 1, status: 'scheduled', startTime: '09:00', endTime: '10:00' },
+        { ...base, id: 2, status: 'cancelled', startTime: '10:00', endTime: '11:00' },
+      ];
+      const layouts = layoutCalendarEvents(events);
+      expect(layouts.get(1)).toEqual({ leftPercent: 0, widthPercent: 100 });
+      expect(layouts.get(2)).toEqual({ leftPercent: 0, widthPercent: 100 });
     });
   });
 
