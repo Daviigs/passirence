@@ -35,6 +35,8 @@ api-whatsapp/storage/auth/
 api-passirence/bin/
 api-passirence/tmp/
 
+docs/
+
 # Angular / frontend
 .angular/
 coverage/
