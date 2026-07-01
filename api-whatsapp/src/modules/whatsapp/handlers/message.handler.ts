@@ -1,5 +1,6 @@
 import type { WAMessage, WASocket } from '@whiskeysockets/baileys';
 import { logger } from '../../../shared/logger/index.js';
+import { sentMessageStore } from '../sessions/sent-message.store.js';
 import { welcomeMessageService } from '../services/welcome-message.service.js';
 import {
   extractPhoneFromJid,
@@ -38,8 +39,12 @@ async function processIncomingMessage(socket: WASocket, message: WAMessage): Pro
 
   const welcomeText = welcomeMessageService.getMessage();
 
-  await socket.sendMessage(remoteJid, { text: welcomeText });
+  const sent = await socket.sendMessage(remoteJid, { text: welcomeText });
+  sentMessageStore.set(sent.key, sent.message);
   welcomeMessageService.markWelcomeSent(phone);
 
-  logger.info({ phone }, 'Mensagem de boas-vindas enviada');
+  logger.info(
+    { phone, remoteJid, messageId: sent.key.id, pid: process.pid },
+    'Mensagem de boas-vindas enviada',
+  );
 }

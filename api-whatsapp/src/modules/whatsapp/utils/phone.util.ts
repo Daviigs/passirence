@@ -102,6 +102,19 @@ export async function resolvePhoneToJid(
     throw new Error('Telefone inválido: formato incorreto');
   }
 
+  const ownJid = socket.user?.id;
+  const ownDigits = ownJid?.split(':')[0]?.split('@')[0]?.replace(/\D/g, '') ?? '';
+  if (ownDigits && candidates.some((candidate) => ownDigits === candidate || ownDigits.endsWith(candidate) || candidate.endsWith(ownDigits))) {
+    const normalizedOwnJid = ownJid.includes('@')
+      ? `${ownJid.split(':')[0]}@${ownJid.split('@')[1]}`
+      : `${ownDigits}@s.whatsapp.net`;
+    logger.info(
+      { input: phone, resolved: normalizedOwnJid, ownJid },
+      'Destino é o próprio número conectado — usando JID da sessão',
+    );
+    return normalizedOwnJid;
+  }
+
   try {
     const results = await socket.onWhatsApp(...candidates);
 
@@ -114,12 +127,7 @@ export async function resolvePhoneToJid(
 
         if (match) {
           const jid = match.jid.includes('@') ? match.jid : `${match.jid}@s.whatsapp.net`;
-          if (jid !== `${candidates[0]}@s.whatsapp.net`) {
-            logger.info(
-              { input: phone, resolved: jid, candidates },
-              'Telefone resolvido via onWhatsApp',
-            );
-          }
+          logger.info({ input: phone, resolved: jid, candidates }, 'Telefone resolvido via onWhatsApp');
           return jid;
         }
       }
@@ -129,15 +137,16 @@ export async function resolvePhoneToJid(
         const jid = firstExisting.jid.includes('@')
           ? firstExisting.jid
           : `${firstExisting.jid}@s.whatsapp.net`;
-        logger.info({ input: phone, resolved: jid }, 'Telefone resolvido via onWhatsApp');
+        logger.info({ input: phone, resolved: jid, candidates }, 'Telefone resolvido via onWhatsApp');
         return jid;
       }
     }
   } catch (error) {
-    logger.warn({ error, phone, candidates }, 'onWhatsApp falhou, usando normalização local');
+    logger.error({ error, phone, candidates }, 'onWhatsApp falhou — JID não confirmado');
+    throw new Error('Não foi possível confirmar o número no WhatsApp');
   }
 
-  return normalizePhoneToJid(phone);
+  throw new Error('Telefone não encontrado no WhatsApp');
 }
 
 export function extractPhoneFromJid(jid: string): string | null {

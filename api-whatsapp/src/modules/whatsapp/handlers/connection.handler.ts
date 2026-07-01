@@ -10,6 +10,7 @@ export interface ConnectionHandlerCallbacks {
   onDisconnected: (status: ConnectionStatus) => void;
   onReconnect: () => void;
   onLoggedOut: () => void;
+  onMaxReconnectAttempts: () => void;
 }
 
 export function mapWaConnectionState(connection?: WAConnectionState): ConnectionStatus {
@@ -23,6 +24,21 @@ export function mapWaConnectionState(connection?: WAConnectionState): Connection
     default:
       return 'disconnected';
   }
+}
+
+function getDisconnectDetails(lastDisconnect: ConnectionState['lastDisconnect']): {
+  statusCode: number | undefined;
+  errorMessage: string;
+} {
+  const error = lastDisconnect?.error as Boom | undefined;
+  const statusCode = error?.output?.statusCode;
+  const errorMessage =
+    error?.message ??
+    (lastDisconnect?.error instanceof Error
+      ? lastDisconnect.error.message
+      : String(lastDisconnect?.error ?? 'desconhecido'));
+
+  return { statusCode, errorMessage };
 }
 
 export function handleConnectionUpdate(
@@ -41,15 +57,15 @@ export function handleConnectionUpdate(
   if (connection === 'open') {
     reconnectAttempts.current = 0;
     callbacks.onConnected();
-    logger.info('WhatsApp conectado');
+    logger.info({ pid: process.pid }, 'WhatsApp conectado');
   }
 
   if (connection === 'close') {
-    const statusCode = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
+    const { statusCode, errorMessage } = getDisconnectDetails(lastDisconnect);
     const isLoggedOut = statusCode === DisconnectReason.loggedOut;
 
     if (isLoggedOut) {
-      logger.warn('Sessão encerrada (logout)');
+      logger.warn({ statusCode, errorMessage, pid: process.pid }, 'Sessão encerrada (logout remoto)');
       callbacks.onLoggedOut();
       return;
     }
@@ -58,15 +74,22 @@ export function handleConnectionUpdate(
 
     if (reconnectAttempts.current >= maxReconnectAttempts) {
       logger.error(
-        { attempts: reconnectAttempts.current },
+        { attempts: reconnectAttempts.current, statusCode, errorMessage, pid: process.pid },
         'Limite de reconexões atingido',
       );
+      callbacks.onMaxReconnectAttempts();
       return;
     }
 
     reconnectAttempts.current += 1;
     logger.warn(
-      { attempt: reconnectAttempts.current, statusCode },
+      {
+        attempt: reconnectAttempts.current,
+        maxReconnectAttempts,
+        statusCode,
+        errorMessage,
+        pid: process.pid,
+      },
       'Conexão perdida, tentando reconectar',
     );
     callbacks.onReconnect();

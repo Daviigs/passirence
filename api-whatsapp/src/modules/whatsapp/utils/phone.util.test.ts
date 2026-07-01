@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   extractPhoneFromJid,
   getBrazilianPhoneCandidates,
   isValidJid,
   normalizePhoneToJid,
+  resolvePhoneToJid,
 } from './phone.util.js';
 
 describe('phone.util', () => {
@@ -66,6 +67,50 @@ describe('phone.util', () => {
     it('valida JID pessoal', () => {
       expect(isValidJid('5511999998888@s.whatsapp.net')).toBe(true);
       expect(isValidJid('abc@s.whatsapp.net')).toBe(false);
+    });
+  });
+
+  describe('resolvePhoneToJid', () => {
+    it('retorna JID confirmado via onWhatsApp', async () => {
+      const socket = {
+        onWhatsApp: vi.fn().mockResolvedValue([
+          { exists: true, jid: '5511999998888@s.whatsapp.net' },
+        ]),
+      };
+
+      const jid = await resolvePhoneToJid(socket as never, '11999998888');
+      expect(jid).toBe('5511999998888@s.whatsapp.net');
+    });
+
+    it('lança erro quando onWhatsApp não encontra o número', async () => {
+      const socket = {
+        onWhatsApp: vi.fn().mockResolvedValue([{ exists: false, jid: '5511999998888@s.whatsapp.net' }]),
+      };
+
+      await expect(resolvePhoneToJid(socket as never, '11999998888')).rejects.toThrow(
+        'Telefone não encontrado no WhatsApp',
+      );
+    });
+
+    it('lança erro quando onWhatsApp falha', async () => {
+      const socket = {
+        onWhatsApp: vi.fn().mockRejectedValue(new Error('network error')),
+      };
+
+      await expect(resolvePhoneToJid(socket as never, '11999998888')).rejects.toThrow(
+        'Não foi possível confirmar o número no WhatsApp',
+      );
+    });
+
+    it('usa JID da sessão quando destino é o próprio número conectado', async () => {
+      const socket = {
+        user: { id: '5511999998888:64@s.whatsapp.net' },
+        onWhatsApp: vi.fn(),
+      };
+
+      const jid = await resolvePhoneToJid(socket as never, '11999998888');
+      expect(jid).toBe('5511999998888@s.whatsapp.net');
+      expect(socket.onWhatsApp).not.toHaveBeenCalled();
     });
   });
 });
