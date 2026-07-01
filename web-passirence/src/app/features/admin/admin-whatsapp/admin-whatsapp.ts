@@ -67,14 +67,6 @@ export class AdminWhatsapp implements OnInit {
   }
 
   disconnect(): void {
-    this.runLogout();
-  }
-
-  clearSession(): void {
-    this.runLogout();
-  }
-
-  private runLogout(): void {
     this.errorMessage.set(null);
     this.isConnecting.set(true);
     this.polling = false;

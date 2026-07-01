@@ -45,14 +45,10 @@
               } @else {
                 <p class="text-gray-500 text-sm mb-4">WhatsApp esta ativo e pronto para enviar mensagens</p>
               }
-              <div class="flex gap-3 justify-center">
+              <div class="flex justify-center">
                 <button (click)="disconnect()" [disabled]="isConnecting()"
                   class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50">
                   @if (isConnecting()) { Desconectando... } @else { Desconectar }
-                </button>
-                <button (click)="clearSession()" [disabled]="isConnecting()"
-                  class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50">
-                  Limpar Sessao
                 </button>
               </div>
             </div>

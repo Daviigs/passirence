@@ -2,8 +2,7 @@ export type ConnectionStatus =
   | 'disconnected'
   | 'connecting'
   | 'connected'
-  | 'qr_pending'
-  | 'logged_out';
+  | 'qr_pending';
 
 export interface WhatsAppStatus {
   status: ConnectionStatus;
@@ -39,6 +38,3 @@ export interface AppointmentConfirmationPayload extends AppointmentBasePayload {
 export type AppointmentCancelPayload = AppointmentBasePayload;
 
 export type AppointmentReminderPayload = AppointmentBasePayload;
-
-/** @deprecated Use AppointmentConfirmationPayload */
-export type AppointmentMessagePayload = AppointmentConfirmationPayload;

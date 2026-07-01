@@ -2,7 +2,6 @@ export type {
   AppointmentBasePayload,
   AppointmentCancelPayload,
   AppointmentConfirmationPayload,
-  AppointmentMessagePayload,
   AppointmentReminderPayload,
   ConnectionStatus,
   HealthStatus,

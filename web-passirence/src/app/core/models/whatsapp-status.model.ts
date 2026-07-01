@@ -2,8 +2,7 @@ export type WhatsappConnectionStatus =
   | 'disconnected'
   | 'connecting'
   | 'connected'
-  | 'qr_pending'
-  | 'logged_out';
+  | 'qr_pending';
 
 export interface WhatsappApiStatus {
   status: WhatsappConnectionStatus;
